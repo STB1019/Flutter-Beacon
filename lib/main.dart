@@ -1,4 +1,5 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 void main() => runApp(BeaconApp());
@@ -23,39 +24,46 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
-  final _beaconCards = <Text>[];
+  final _beaconName = <String>[];
+  Color cardColor;
 
   //This method is executed first
   @override
   void initState(){
     super.initState();
     //here I can fetch datas from Beacons
+    cardColor = Colors.transparent;
     print("This message is printed in initState() method");
-  }
-
-
-  Widget _buildRow(Text text) {
-    return ListTile(
-      title: Text(
-        text.data,
-      ),
-    );
   }
 
 
   Widget _buildBeaconFound(){
     return ListView.builder(
-        padding: EdgeInsets.all(16.0),
-        itemBuilder: (context, i) {
-          if (i.isOdd) return Divider();
-          final index = i ~/ 2;
-          if (index >= _beaconCards.length) {
-            for(int j = 0; j < 1; j++){
-              _beaconCards.add(Text("ciao " + index.toString()));
-            }
+        itemBuilder: (context, index) {
+          if (index >= _beaconName.length) {
+            _beaconName.add(index.toString());
           }
-          return _buildRow(_beaconCards[index]);
+          return Card(
+              child: _buildRow(_beaconName[index])
+          );
         });
+  }
+
+
+  Widget _buildRow(String text) {
+    return ListTile(
+      leading: FlutterLogo(size: 40,),
+      title: Text("Beacon"),
+      subtitle: Text("name: " + text.toString()),
+      trailing: const Icon(Icons.more_horiz),
+      tileColor: cardColor,
+      onTap: () {
+        setState(() {
+          if(cardColor == Colors.amberAccent) cardColor = Colors.transparent;
+          else cardColor = Colors.amberAccent;
+        });
+      }
+    );
   }
 
 
@@ -66,19 +74,15 @@ class _HomePageState extends State<HomePage> {
         title: Text("Beacon BLE"),
         backgroundColor: Colors.deepPurpleAccent,
       ),
-      body: _buildBeaconFound(),
+      body: Container(
+          child: _buildBeaconFound(),
+      ),
         /*GridView.count(
         crossAxisCount: 2,
         children: <Widget>[Card(), Card(), Card(), Card(), Card()],
         //shows a grid viex with 2 columns of the widgets I will pass
       ),*/
       drawer: Drawer(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.redAccent,
-        child: Icon(Icons.whatshot_rounded),
-
-      ),
     );
   }
 }
