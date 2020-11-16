@@ -11,7 +11,7 @@ class BeaconPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(_name),
-        backgroundColor: Colors.deepPurpleAccent,
+        backgroundColor: Colors.purple,
       ),
     );
   }
