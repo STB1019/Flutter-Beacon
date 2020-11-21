@@ -44,15 +44,7 @@ class TaskEntity extends ModelEntity {
   }
 
   // DB Function
-  static Future<List> getAll() async {
-    DBMS dbprovider = DBMS();
-    try {
-      // ...
-    } catch(e) {
-      //Handle all other exceptions
-    }
-    //bella riga in cui inizializzo il database _db dentro l'oggetto DBMS dbmprovider
-
+  static Future<List> getAll(DBMS dbprovider) async {
     var buffer = await dbprovider.getObj(tableName);
     return buffer.map((c) => TaskEntity.fromSQL(c)).toList();
   }

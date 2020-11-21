@@ -97,7 +97,7 @@ class _HomePageState extends State<HomePage> {
                 }),
             Expanded(
                 child: FutureBuilder(
-                    future: TaskEntity.getAll(),
+                    future: TaskEntity.getAll(DBMS()),
                     builder: (context, snapshot) {
                       if (snapshot.hasError)
                         return Text("Non funziona niente\n${snapshot.error}");

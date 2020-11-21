@@ -21,7 +21,7 @@ class DBMS {
 
   Future<Database> get database async {
     if (_db == null) _db = await createDB();
-    return await _db;
+    return _db;
   }
 
   /// Creazione DB, compresa logica di creazione file
