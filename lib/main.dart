@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'orm/dbprovider.dart';
 import 'orm/task.dart';
 
+//NON FUNZIONANTE: muoversi nei branch: https://github.com/STB1019/Flutter-Beacon/network
 void main() => runApp(BeaconApp());
 
 class BeaconApp extends StatelessWidget {
@@ -58,11 +59,11 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () {
                   // SnackBar pops up a message for a certain interval of time
                   // ScaffoldMessenger handles SnackBars
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  Scaffold.of(context).showSnackBar(SnackBar(
                       content: Text("Avvio reset DB"),
                       duration: Duration(seconds: 1, milliseconds: 500)));
                   DBMS.internal().createDB().then((value) {
-                    ScaffoldMessenger.of(context)
+                    Scaffold.of(context)
                         .showSnackBar(SnackBar(content: Text("DB settato")));
                   });
                 },
@@ -132,7 +133,7 @@ class _HomePageState extends State<HomePage> {
           return FloatingActionButton(
             onPressed: () {
               setState(() {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                Scaffold.of(context).showSnackBar(SnackBar(
                   content: Text("Salvataggio in corso"),
                   duration: Duration(seconds: 2, milliseconds: 500),
                 ));
