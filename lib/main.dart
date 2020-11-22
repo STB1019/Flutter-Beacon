@@ -20,7 +20,6 @@ class BeaconApp extends StatelessWidget {
   }
 }
 
-//I need a stateful widget because screen is going to change if we find a new Beacon
 class HomePage extends StatefulWidget {
   final String title;
   HomePage({Key key, this.title}) : super(key: key);
@@ -39,10 +38,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
   bool authorizationStatusOk = false;
   bool locationServiceEnabled = false;
   bool bluetoothEnabled = false;
-
-  final _beaconName = <String>["Giulio", "Giorgio", "Marco", "Paolo"];
-  final _selectedBeacons = Set<String>();
-  Color cardColor;
 
   //This method is executed first
   @override
@@ -100,9 +95,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
           'bluetoothEnabled=$bluetoothEnabled');
       return;
     }
+    //posso scollegarmi dalle regioni e cercare beacon con ogni UUID?
     final regions = <Region>[
       Region(
-        identifier: 'Cubeacon',
+        identifier: 'Beacon della mamma',
         proximityUUID: 'CB10023F-A318-3394-4199-A8730C7C1AEC',
       ),
     ];
@@ -182,14 +178,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
     return Scaffold(
       drawer: Drawer(),
       appBar: AppBar(
-        backgroundColor: Colors.amberAccent,
-        title: Text("Beacon BLE"),
+        backgroundColor: Colors.indigo,
+        title: Text("Beacon BLE Scanner"),
         actions: <Widget>[
           //When pressed, the app requests an authorization to access the device's location
           if (!authorizationStatusOk)
             IconButton(
                 icon: Icon(Icons.portable_wifi_off),
-                color: Colors.blueGrey,
+                color: Colors.grey,
                 onPressed: () async {
                   await flutterBeacon.requestAuthorization;
                 }),
@@ -197,7 +193,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
           if (!locationServiceEnabled)
             IconButton(
                 icon: Icon(Icons.location_off),
-                color: Colors.red,
+                color: Colors.grey,
                 onPressed: () async {
                   if (Platform.isAndroid) {
                     await flutterBeacon.openLocationSettings;
@@ -211,8 +207,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
                 if (state == BluetoothState.stateOn) {
                   return IconButton(
                     icon: Icon(Icons.bluetooth_connected),
-                    onPressed: () {},
-                    color: Colors.lightGreen,
+                    onPressed: () {}, //devo dare la possibilità di disabilitarlo
+                    color: Colors.green,
                   );
                 }
                 if (state == BluetoothState.stateOff) {
@@ -227,7 +223,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
                         }
                       } else if (Platform.isIOS) {}
                     },
-                    color: Colors.blueGrey,
+                    color: Colors.white,
                   );
                 }
 
@@ -247,81 +243,37 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
       ),
 
 
-      body: _beacons == null || _beacons.isEmpty
+      body: (!authorizationStatusOk || !locationServiceEnabled || !bluetoothEnabled)
+          ? Center(child: Text("Non ho ho le autorizzazioni necessarie"))
+          : (_beacons == null || _beacons.isEmpty)
           ? Center(child: CircularProgressIndicator())
-          : ListView(
-        children: ListTile.divideTiles(
-            context: context,
-            tiles: _beacons.map((beacon) {
-              return ListTile(
-                title: Text(beacon.proximityUUID),
-                subtitle: new Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: <Widget>[
-                    Flexible(
-                        child: Text(
-                            'Major: ${beacon.major}\nMinor: ${beacon.minor}',
-                            style: TextStyle(fontSize: 13.0)),
-                        flex: 1,
-                        fit: FlexFit.tight),
-                    Flexible(
-                        child: Text(
-                            'Accuracy: ${beacon.accuracy}m\nRSSI: ${beacon.rssi}',
-                            style: TextStyle(fontSize: 13.0)),
-                        flex: 2,
-                        fit: FlexFit.tight)
-                  ],
-                ),
-              );
-            })).toList(),
-      ),
-
-
-      //body: Container(
-        //child: _buildBeaconFound(),
-      //),
-
-
+          : Container(
+        child: _buildBeaconFound(),
+      )
     );
   }
 
   Widget _buildBeaconFound() {
     return ListView.builder(
-        itemCount: _beaconName.length,
+        itemCount: _beacons.length,
         itemBuilder: (context, index) {
-          return Card(child: _buildRow(_beaconName[index]));
+          return Card(child: _buildRow(_beacons[index]));
         });
   }
 
-  Widget _buildRow(String text) {
-    final selected = _selectedBeacons.contains(text);
+  Widget _buildRow(Beacon beacon) {
     return ListTile(
         leading: FlutterLogo(
           size: 40,
         ),
-        title: Text("Beacon"),
-        subtitle: Text("name: " + text.toString()),
-        trailing: GestureDetector(
-          onTap: () {
-            setState(() {
-              if (selected)
-                _selectedBeacons.remove(text);
-              else
-                _selectedBeacons.add(text);
-            });
-          },
-          child: Icon(
-            selected ? Icons.wb_sunny : Icons.wb_sunny_outlined,
-            color: selected ? Colors.amber : null,
-          ),
-        ),
-        tileColor: cardColor,
+        title: Text('proximityUUID:  ${beacon.proximityUUID}'),
+        subtitle: Text('Major: ${beacon.major} Minor: ${beacon.minor}\nAccuracy: ${beacon.accuracy}m\nRSSI: ${beacon.rssi}'),
         onTap: () {
           setState(() {
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => BeaconPage(text.toString())));
+                    builder: (context) => BeaconPage(beacon)));
           });
         });
   }

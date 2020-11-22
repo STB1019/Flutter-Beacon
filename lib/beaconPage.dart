@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_beacon/flutter_beacon.dart';
+
 class BeaconPage extends StatelessWidget {
 
-  final String _name;
+  final Beacon beacon;
 
-  BeaconPage(this._name);
+  BeaconPage(this.beacon);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_name),
+        title: Text(beacon.proximityUUID),
         backgroundColor: Colors.purple,
       ),
     );
   }
 }
+
