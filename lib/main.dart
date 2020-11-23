@@ -22,14 +22,15 @@ class BeaconApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   final String title;
+
   HomePage({Key key, this.title}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
-
+//WidgetsBindingObserver is needed for performance, to stop the app when it goes on background
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final StreamController<BluetoothState> streamController = StreamController();
   StreamSubscription<BluetoothState> _streamBluetooth;
   StreamSubscription<RangingResult> _streamRanging;
@@ -47,7 +48,38 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
     listeningState();
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    streamController?.close();
+    _streamRanging?.cancel();
+    _streamBluetooth?.cancel();
+    flutterBeacon.close;
 
+    super.dispose();
+  }
+
+  //this method stops and starts the beacon scanning when i exit the application or when i reopen it
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    print('AppLifecycleState = $state');
+    if (state == AppLifecycleState.resumed) {
+      if (_streamBluetooth != null && _streamBluetooth.isPaused) {
+        _streamBluetooth.resume();
+      }
+      await checkAllRequirements();
+      if (authorizationStatusOk && locationServiceEnabled && bluetoothEnabled) {
+        await initScanBeacon();
+      } else {
+        await pauseScanBeacon();
+        await checkAllRequirements();
+      }
+    } else if (state == AppLifecycleState.paused) {
+      _streamBluetooth?.pause();
+    }
+  }
+
+  //this method is called on initState() and checks the bluetooth state, then decides if it has to start scanning beacons
   listeningState() async {
     print('Listening to bluetooth state');
     _streamBluetooth = flutterBeacon
@@ -76,7 +108,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
         authorizationStatus == AuthorizationStatus.allowed ||
             authorizationStatus == AuthorizationStatus.always;
     final locationServiceEnabled =
-    await flutterBeacon.checkLocationServicesIfEnabled;
+        await flutterBeacon.checkLocationServicesIfEnabled;
 
     setState(() {
       this.authorizationStatusOk = authorizationStatusOk;
@@ -85,24 +117,31 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
     });
   }
 
+  //On android i can scan without knowing the UUID's
   initScanBeacon() async {
     await flutterBeacon.initializeScanning;
     await checkAllRequirements();
 
-    if (!authorizationStatusOk || !locationServiceEnabled || !bluetoothEnabled) {
+    if (!authorizationStatusOk ||
+        !locationServiceEnabled ||
+        !bluetoothEnabled) {
       print('RETURNED, authorizationStatusOk=$authorizationStatusOk, '
           'locationServiceEnabled=$locationServiceEnabled, '
           'bluetoothEnabled=$bluetoothEnabled');
       return;
     }
-    //posso scollegarmi dalle regioni e cercare beacon con ogni UUID?
-    final regions = <Region>[
-      Region(
-        identifier: 'Beacon della mamma',
-        proximityUUID: 'CB10023F-A318-3394-4199-A8730C7C1AEC',
-      ),
-    ];
 
+    final regions = <Region>[];
+
+    if (Platform.isIOS) {
+      // iOS platform, at least set identifier and proximityUUID for region scanning
+      regions.add(Region(
+          identifier: "mamma's beacons",
+          proximityUUID: 'CB10023F-A318-3394-4199-A8730C7C1AEC'));
+    } else {
+      // android platform, it can ranging out of beacon that filter all of Proximity UUID
+      regions.add(Region(identifier: 'com.beacon'));
+    }
     if (_streamRanging != null) {
       if (_streamRanging.isPaused) {
         _streamRanging.resume();
@@ -110,27 +149,31 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
       }
     }
 
+    // see: https://github.com/alann-maulana/flutter_beacon for the difference between ranging beacons and monitoring beacons
     _streamRanging =
         flutterBeacon.ranging(regions).listen((RangingResult result) {
-          print(result);
-          if (result != null && mounted) {
-            setState(() {
-              _regionBeacons[result.region] = result.beacons;
-              _beacons.clear();
-              _regionBeacons.values.forEach((list) {
-                _beacons.addAll(list);
-              });
-              _beacons.sort(_compareParameters);
-            });
-          }
+      // result contains a region and list of beacons found
+      print(result);
+      if (result != null && mounted) {
+        setState(() {
+          //adds to the variable _regionBeacon the found UUID's with the beacons
+          _regionBeacons[result.region] = result.beacons;
+          _beacons.clear();
+          _regionBeacons.values.forEach((list) {
+            _beacons.addAll(list);
+          });
+          _beacons.sort(_compareParameters);
         });
+      }
+    });
   }
 
   pauseScanBeacon() async {
     _streamRanging?.pause();
     if (_beacons.isNotEmpty) {
-      setState(() {_beacons.clear();}
-      );
+      setState(() {
+        _beacons.clear();
+      });
     }
   }
 
@@ -141,115 +184,127 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
     return compare;
   }
 
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
-    print('AppLifecycleState = $state');
-    if (state == AppLifecycleState.resumed) {
-      if (_streamBluetooth != null && _streamBluetooth.isPaused) {
-        _streamBluetooth.resume();
-      }
-      await checkAllRequirements();
-      if (authorizationStatusOk && locationServiceEnabled && bluetoothEnabled) {
-        await initScanBeacon();
-      } else {
-        await pauseScanBeacon();
-        await checkAllRequirements();
-      }
-    } else if (state == AppLifecycleState.paused) {
-      _streamBluetooth?.pause();
-    }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    streamController?.close();
-    _streamRanging?.cancel();
-    _streamBluetooth?.cancel();
-    flutterBeacon.close;
-
-    super.dispose();
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(),
-      appBar: AppBar(
-        backgroundColor: Colors.indigo,
-        title: Text("Beacon BLE Scanner"),
-        actions: <Widget>[
-          //When pressed, the app requests an authorization to access the device's location
-          if (!authorizationStatusOk)
-            IconButton(
-                icon: Icon(Icons.portable_wifi_off),
-                color: Colors.grey,
-                onPressed: () async {
-                  await flutterBeacon.requestAuthorization;
-                }),
-          //When pressed, opens the location settings
-          if (!locationServiceEnabled)
-            IconButton(
-                icon: Icon(Icons.location_off),
-                color: Colors.grey,
-                onPressed: () async {
-                  if (Platform.isAndroid) {
-                    await flutterBeacon.openLocationSettings;
-                  } else if (Platform.isIOS) {}
-                }),
-
-          StreamBuilder<BluetoothState>(
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                final state = snapshot.data;
-                if (state == BluetoothState.stateOn) {
-                  return IconButton(
-                    icon: Icon(Icons.bluetooth_connected),
-                    onPressed: () {}, //devo dare la possibilità di disabilitarlo
-                    color: Colors.green,
-                  );
-                }
-                if (state == BluetoothState.stateOff) {
-                  return IconButton(
-                    icon: Icon(Icons.bluetooth),
-                    onPressed: () async {
-                      if (Platform.isAndroid) {
-                        try {
-                          await flutterBeacon.openBluetoothSettings;
-                        } on PlatformException catch (e) {
-                          print(e);
-                        }
-                      } else if (Platform.isIOS) {}
-                    },
-                    color: Colors.white,
-                  );
-                }
-
-                return IconButton(
-                  icon: Icon(Icons.bluetooth_disabled),
-                  onPressed: () {},
+        drawer: Drawer(),
+        appBar: AppBar(
+          backgroundColor: Colors.indigo,
+          title: Text("Beacon BLE Scanner"),
+          actions: <Widget>[
+            //When pressed, the app requests an authorization to access the device's location
+            if (!authorizationStatusOk)
+              IconButton(
+                  icon: Icon(Icons.portable_wifi_off),
                   color: Colors.grey,
-                );
-              }
+                  onPressed: () async {
+                    await flutterBeacon.requestAuthorization;
+                  }),
+            //When pressed, opens the location settings
+            if (!locationServiceEnabled)
+              IconButton(
+                  icon: Icon(Icons.location_off),
+                  color: Colors.grey,
+                  onPressed: () async {
+                    if (Platform.isAndroid) {
+                      await flutterBeacon.openLocationSettings;
+                    } else if (Platform.isIOS) {}
+                  }),
 
-              return SizedBox.shrink();
-            },
-            stream: streamController.stream,
-            initialData: BluetoothState.stateUnknown,
-          ),
-        ],
-      ),
+            StreamBuilder<BluetoothState>(
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final state = snapshot.data;
+                  if (state == BluetoothState.stateOn) {
+                    return IconButton(
+                      icon: Icon(Icons.bluetooth_connected),
+                      onPressed: () {},
+                      //devo dare la possibilità di disabilitarlo
+                      color: Colors.green,
+                    );
+                  }
+                  if (state == BluetoothState.stateOff) {
+                    return IconButton(
+                      icon: Icon(Icons.bluetooth),
+                      onPressed: () async {
+                        if (Platform.isAndroid) {
+                          try {
+                            await flutterBeacon.openBluetoothSettings;
+                          } on PlatformException catch (e) {
+                            print(e);
+                          }
+                        } else if (Platform.isIOS) {}
+                      },
+                      color: Colors.white,
+                    );
+                  }
 
+                  return IconButton(
+                    icon: Icon(Icons.bluetooth_disabled),
+                    onPressed: () {},
+                    color: Colors.grey,
+                  );
+                }
 
-      body: (!authorizationStatusOk || !locationServiceEnabled || !bluetoothEnabled)
-          ? Center(child: Text("Non ho ho le autorizzazioni necessarie"))
-          : (_beacons == null || _beacons.isEmpty)
-          ? Center(child: CircularProgressIndicator())
-          : Container(
-        child: _buildBeaconFound(),
-      )
+                return SizedBox.shrink();
+              },
+              stream: streamController.stream,
+              initialData: BluetoothState.stateUnknown,
+            ),
+          ],
+        ),
+
+        //ONLY FOR TESTING GRAPHICS
+        body: _buildRow(Beacon(
+          proximityUUID:
+          'CB10023F-A318-3394-4199-A8730C7C1AEC',
+          macAddress: '00:0a:95:9d:68:16',
+          major: 3,
+          minor: 41,
+          rssi: -76,
+          txPower: -60,
+          accuracy: 2.43,
+        ))
+
+        // body: (!authorizationStatusOk ||
+        //         !locationServiceEnabled ||
+        //         !bluetoothEnabled)
+        //     ? Column(
+        //         mainAxisAlignment: MainAxisAlignment.center,
+        //         children: <Widget>[
+        //             Padding(
+        //               padding: const EdgeInsets.all(8.0),
+        //               child: Image.asset(
+        //                 'assets/images/error_icon.png',
+        //                 color: Colors.amber[400],
+        //                 scale: 1.7,
+        //               ),
+        //             ),
+        //             Text(
+        //               "Impossibile eseguire la scansione",
+        //               textAlign: TextAlign.center,
+        //               style: TextStyle(
+        //                 color: Colors.black54,
+        //                 fontSize: 18,
+        //               ),
+        //             ),
+        //             Padding(
+        //               padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
+        //               child: Text(
+        //                 "Consentire l'accesso alla localizzazione e attivare il Bluetooth del dispositivo",
+        //                 textAlign: TextAlign.center,
+        //                 style: TextStyle(
+        //                   color: Colors.black54,
+        //                   fontSize: 15,
+        //                 ),
+        //               ),
+        //             )
+        //           ])
+        //     : (_beacons == null || _beacons.isEmpty)
+        //         ? Center(child: CircularProgressIndicator())
+        //         : Container(
+        //             child: _buildBeaconFound(),
+        //           )
     );
   }
 
@@ -263,17 +318,28 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver{
 
   Widget _buildRow(Beacon beacon) {
     return ListTile(
-        leading: FlutterLogo(
+        leading: Icon(
+          Icons.bluetooth_audio_rounded,
+          color: Colors.blue,
           size: 40,
         ),
-        title: Text('proximityUUID:  ${beacon.proximityUUID}'),
-        subtitle: Text('Major: ${beacon.major} Minor: ${beacon.minor}\nAccuracy: ${beacon.accuracy}m\nRSSI: ${beacon.rssi}'),
+        title: Text(
+          beacon.macAddress,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Wrap(
+          children: [
+            Text('Accuracy: ' + beacon.accuracy.toString() + 'm, '),
+            Text('RSSI: ' + beacon.rssi.toString()),
+          ],
+        ),
         onTap: () {
           setState(() {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => BeaconPage(beacon)));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => BeaconPage(beacon)));
           });
         });
   }
