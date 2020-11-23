@@ -255,57 +255,65 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         ),
 
         //ONLY FOR TESTING GRAPHICS
-        body: _buildRow(Beacon(
-          proximityUUID:
-          'CB10023F-A318-3394-4199-A8730C7C1AEC',
-          macAddress: '00:0a:95:9d:68:16',
-          major: 3,
-          minor: 41,
-          rssi: -76,
-          txPower: -60,
-          accuracy: 2.43,
-        ))
+        // body: SafeArea(
+        //   child: Card(
+        //     child: _buildRow(Beacon(
+        //       proximityUUID:
+        //       'CB10023F-A318-3394-4199-A8730C7C1AEC',
+        //       macAddress: '00:0a:95:9d:68:16',
+        //       major: 3,
+        //       minor: 41,
+        //       rssi: -76,
+        //       txPower: -60,
+        //       accuracy: 2.43,
+        //     )),
+        //   ),
+        // )
 
-        // body: (!authorizationStatusOk ||
-        //         !locationServiceEnabled ||
-        //         !bluetoothEnabled)
-        //     ? Column(
-        //         mainAxisAlignment: MainAxisAlignment.center,
-        //         children: <Widget>[
-        //             Padding(
-        //               padding: const EdgeInsets.all(8.0),
-        //               child: Image.asset(
-        //                 'assets/images/error_icon.png',
-        //                 color: Colors.amber[400],
-        //                 scale: 1.7,
-        //               ),
-        //             ),
-        //             Text(
-        //               "Impossibile eseguire la scansione",
-        //               textAlign: TextAlign.center,
-        //               style: TextStyle(
-        //                 color: Colors.black54,
-        //                 fontSize: 18,
-        //               ),
-        //             ),
-        //             Padding(
-        //               padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
-        //               child: Text(
-        //                 "Consentire l'accesso alla localizzazione e attivare il Bluetooth del dispositivo",
-        //                 textAlign: TextAlign.center,
-        //                 style: TextStyle(
-        //                   color: Colors.black54,
-        //                   fontSize: 15,
-        //                 ),
-        //               ),
-        //             )
-        //           ])
-        //     : (_beacons == null || _beacons.isEmpty)
-        //         ? Center(child: CircularProgressIndicator())
-        //         : Container(
-        //             child: _buildBeaconFound(),
-        //           )
-    );
+        body: (!authorizationStatusOk ||
+                !locationServiceEnabled ||
+                !bluetoothEnabled)
+            ? SafeArea(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Image.asset(
+                          'assets/images/error_icon.png',
+                          color: Colors.amber[400],
+                          scale: 1.7,
+                        ),
+                      ),
+                      Text(
+                        "Impossibile eseguire la scansione",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 18,
+                        ),
+                      ),
+                      Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
+                        child: Text(
+                          "Consentire l'accesso alla localizzazione e attivare il Bluetooth del dispositivo",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: 15,
+                          ),
+                        ),
+                      )
+                    ]),
+              )
+            : (_beacons == null || _beacons.isEmpty)
+                ? Center(child: CircularProgressIndicator())
+                : SafeArea(
+                    child: Container(
+                      child: _buildBeaconFound(),
+                    ),
+                  ));
   }
 
   Widget _buildBeaconFound() {
