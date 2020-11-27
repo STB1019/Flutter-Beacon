@@ -12,7 +12,6 @@ class BeaconPage extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           title: Text(beacon.macAddress),
-          backgroundColor: Colors.indigo,
         ),
         body: SafeArea(
           child: Padding(

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:Beacon/beaconPage.dart';
+import 'package:Beacon/main_drawer.dart';
+import 'package:Beacon/theme.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,13 +14,35 @@ void main() => runApp(BeaconApp());
 class BeaconApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      color: Colors.deepPurpleAccent,
-      debugShowCheckedModeBanner: false,
-      home: HomePage(),
+    return ThemeBuilder(
+      builder: (context, _brightness, _primaryColor, _accentColor){
+        return MaterialApp(
+          theme: ThemeData(
+            // Define the default brightness and colors.
+            brightness: _brightness,
+            primaryColor: _primaryColor,
+            accentColor: _accentColor,
+
+            // Define the default font family.
+            fontFamily: '',
+
+            // Define the default TextTheme. Use this to specify the default
+            // text styling for headlines, titles, bodies of text, and more.
+            textTheme: TextTheme(
+              headline1: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
+              headline2: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+              bodyText2: TextStyle(fontSize: 14.0),
+            ),
+          ),
+          debugShowCheckedModeBanner: false,
+          home: HomePage(),
+
+        );
+      }
     );
   }
 }
+
 
 class HomePage extends StatefulWidget {
   final String title;
@@ -28,6 +52,7 @@ class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
+
 
 //WidgetsBindingObserver is needed for performance, to stop the app when it goes on background
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
@@ -187,9 +212,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        drawer: Drawer(),
+        //drawer: BeaconDrawer(),
+        drawer: BeaconDrawer(),
         appBar: AppBar(
-          backgroundColor: Colors.indigo,
+          //backgroundColor: Theme.of(context).primaryColor,
           title: Text("Beacon BLE Scanner"),
           actions: <Widget>[
             //When pressed, the app requests an authorization to access the device's location
@@ -255,22 +281,22 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         ),
 
         //ONLY FOR TESTING GRAPHICS
-        // body: SafeArea(
-        //   child: Card(
-        //     child: _buildRow(Beacon(
-        //       proximityUUID:
-        //       'CB10023F-A318-3394-4199-A8730C7C1AEC',
-        //       macAddress: '00:0a:95:9d:68:16',
-        //       major: 3,
-        //       minor: 41,
-        //       rssi: -76,
-        //       txPower: -60,
-        //       accuracy: 2.43,
-        //     )),
-        //   ),
-        // )
+         body: SafeArea(
+           child: Card(
+             child: _buildRow(Beacon(
+               proximityUUID:
+               'CB10023F-A318-3394-4199-A8730C7C1AEC',
+               macAddress: '00:0a:95:9d:68:16',
+               major: 3,
+               minor: 41,
+               rssi: -76,
+               txPower: -60,
+               accuracy: 2.43,
+             )),
+           ),
+         ),
 
-        body: (!authorizationStatusOk ||
+        /*body: (!authorizationStatusOk ||
                 !locationServiceEnabled ||
                 !bluetoothEnabled)
             ? SafeArea(
@@ -289,7 +315,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         "Impossibile eseguire la scansione",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.black54,
                           fontSize: 18,
                         ),
                       ),
@@ -300,7 +325,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           "Consentire l'accesso alla localizzazione e attivare il Bluetooth del dispositivo",
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.black54,
                             fontSize: 15,
                           ),
                         ),
@@ -313,8 +337,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     child: Container(
                       child: _buildBeaconFound(),
                     ),
-                  ));
+                  )*/
+    );
+
   }
+
 
   Widget _buildBeaconFound() {
     return ListView.builder(
