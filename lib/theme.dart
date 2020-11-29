@@ -67,7 +67,6 @@ class ThemeBuilderState extends State<ThemeBuilder>{
   Widget build(BuildContext context) {
     return widget.builder(context, _brightness, _primaryColor, _accentColor);
   }
-
 }
 
 

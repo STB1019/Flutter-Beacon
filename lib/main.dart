@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:Beacon/beaconPage.dart';
+import 'package:Beacon/beacon_page.dart';
 import 'package:Beacon/main_drawer.dart';
 import 'package:Beacon/theme.dart';
 
@@ -15,34 +15,31 @@ class BeaconApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ThemeBuilder(
-      builder: (context, _brightness, _primaryColor, _accentColor){
-        return MaterialApp(
-          theme: ThemeData(
-            // Define the default brightness and colors.
-            brightness: _brightness,
-            primaryColor: _primaryColor,
-            accentColor: _accentColor,
+        builder: (context, _brightness, _primaryColor, _accentColor) {
+      return MaterialApp(
+        theme: ThemeData(
+          // Define the default brightness and colors.
+          brightness: _brightness,
+          primaryColor: _primaryColor,
+          accentColor: _accentColor,
 
-            // Define the default font family.
-            fontFamily: '',
+          // Define the default font family.
+          fontFamily: '',
 
-            // Define the default TextTheme. Use this to specify the default
-            // text styling for headlines, titles, bodies of text, and more.
-            textTheme: TextTheme(
-              headline1: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
-              headline2: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-              bodyText2: TextStyle(fontSize: 14.0),
-            ),
+          // Define the default TextTheme. Use this to specify the default
+          // text styling for headlines, titles, bodies of text, and more.
+          textTheme: TextTheme(
+            headline1: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
+            headline2: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+            bodyText2: TextStyle(fontSize: 14.0),
           ),
-          debugShowCheckedModeBanner: false,
-          home: HomePage(),
-
-        );
-      }
-    );
+        ),
+        debugShowCheckedModeBanner: false,
+        home: HomePage(),
+      );
+    });
   }
 }
-
 
 class HomePage extends StatefulWidget {
   final String title;
@@ -52,7 +49,6 @@ class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
-
 
 //WidgetsBindingObserver is needed for performance, to stop the app when it goes on background
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
@@ -215,76 +211,76 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        //drawer: BeaconDrawer(),
-        drawer: BeaconDrawer(),
-        appBar: AppBar(
-          //backgroundColor: Theme.of(context).primaryColor,
-          title: Text("Beacon BLE Scanner"),
-          actions: <Widget>[
-            //When pressed, the app requests an authorization to access the device's location
-            if (!authorizationStatusOk)
-              IconButton(
-                  icon: Icon(Icons.portable_wifi_off),
-                  color: Colors.grey,
-                  onPressed: () async {
-                    await flutterBeacon.requestAuthorization;
-                  }),
-            //When pressed, opens the location settings
-            if (!locationServiceEnabled)
-              IconButton(
-                  icon: Icon(Icons.location_off),
-                  color: Colors.grey,
-                  onPressed: () async {
-                    if (Platform.isAndroid) {
-                      await flutterBeacon.openLocationSettings;
-                    } else if (Platform.isIOS) {}
-                  }),
+      //drawer: BeaconDrawer(),
+      drawer: BeaconDrawer(_savedRegions),
+      appBar: AppBar(
+        //backgroundColor: Theme.of(context).primaryColor,
+        title: Text("Beacon BLE Scanner"),
+        actions: <Widget>[
+          //When pressed, the app requests an authorization to access the device's location
+          if (!authorizationStatusOk)
+            IconButton(
+                icon: Icon(Icons.portable_wifi_off),
+                color: Colors.grey,
+                onPressed: () async {
+                  await flutterBeacon.requestAuthorization;
+                }),
+          //When pressed, opens the location settings
+          if (!locationServiceEnabled)
+            IconButton(
+                icon: Icon(Icons.location_off),
+                color: Colors.grey,
+                onPressed: () async {
+                  if (Platform.isAndroid) {
+                    await flutterBeacon.openLocationSettings;
+                  } else if (Platform.isIOS) {}
+                }),
 
-            StreamBuilder<BluetoothState>(
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final state = snapshot.data;
-                  if (state == BluetoothState.stateOn) {
-                    return IconButton(
-                      icon: Icon(Icons.bluetooth_connected),
-                      onPressed: () {},
-                      //devo dare la possibilità di disabilitarlo
-                      color: Colors.green,
-                    );
-                  }
-                  if (state == BluetoothState.stateOff) {
-                    return IconButton(
-                      icon: Icon(Icons.bluetooth),
-                      onPressed: () async {
-                        if (Platform.isAndroid) {
-                          try {
-                            await flutterBeacon.openBluetoothSettings;
-                          } on PlatformException catch (e) {
-                            print(e);
-                          }
-                        } else if (Platform.isIOS) {}
-                      },
-                      color: Colors.white,
-                    );
-                  }
-
+          StreamBuilder<BluetoothState>(
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                final state = snapshot.data;
+                if (state == BluetoothState.stateOn) {
                   return IconButton(
-                    icon: Icon(Icons.bluetooth_disabled),
+                    icon: Icon(Icons.bluetooth_connected),
                     onPressed: () {},
-                    color: Colors.grey,
+                    //devo dare la possibilità di disabilitarlo
+                    color: Colors.green,
+                  );
+                }
+                if (state == BluetoothState.stateOff) {
+                  return IconButton(
+                    icon: Icon(Icons.bluetooth),
+                    onPressed: () async {
+                      if (Platform.isAndroid) {
+                        try {
+                          await flutterBeacon.openBluetoothSettings;
+                        } on PlatformException catch (e) {
+                          print(e);
+                        }
+                      } else if (Platform.isIOS) {}
+                    },
+                    color: Colors.white,
                   );
                 }
 
-                return SizedBox.shrink();
-              },
-              stream: streamController.stream,
-              initialData: BluetoothState.stateUnknown,
-            ),
-          ],
-        ),
+                return IconButton(
+                  icon: Icon(Icons.bluetooth_disabled),
+                  onPressed: () {},
+                  color: Colors.grey,
+                );
+              }
 
-        //ONLY FOR TESTING GRAPHICS
-         body: SafeArea(
+              return SizedBox.shrink();
+            },
+            stream: streamController.stream,
+            initialData: BluetoothState.stateUnknown,
+          ),
+        ],
+      ),
+
+      //ONLY FOR TESTING GRAPHICS
+      /*body: SafeArea(
            child: Card(
              child: _buildRow(Beacon(
                proximityUUID:
@@ -297,33 +293,35 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                accuracy: 2.43,
              )),
            ),
-         ),
+         ),*/
 
-        /*body: (!authorizationStatusOk ||
-                !locationServiceEnabled ||
-                !bluetoothEnabled)
-            ? SafeArea(
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Image.asset(
-                          'assets/images/error_icon.png',
-                          color: Colors.amber[400],
-                          scale: 1.7,
-                        ),
+      body: (!authorizationStatusOk ||
+              !locationServiceEnabled ||
+              !bluetoothEnabled)
+          ? SafeArea(
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        'assets/images/error_icon.png',
+                        color: Colors.amber[400],
+                        scale: 1.7,
                       ),
-                      Text(
+                    ),
+                    Center(
+                      child: Text(
                         "Impossibile eseguire la scansione",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,
                         ),
                       ),
-                      Padding(
-                        padding:
-                            const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
+                      child: Center(
                         child: Text(
                           "Consentire l'accesso alla localizzazione e attivare il Bluetooth del dispositivo",
                           textAlign: TextAlign.center,
@@ -331,56 +329,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             fontSize: 15,
                           ),
                         ),
-                      )
-                    ]),
-              )
-            : (_beacons == null || _beacons.isEmpty)
-                ? Center(child: CircularProgressIndicator())
-                : SafeArea(
-                    child: Container(
-                      child: _buildBeaconFound(),
-                    ),
-                  )*/
-      floatingActionButton: new FloatingActionButton(
-        onPressed: (){
-          print(_savedRegions.toString());
-          createAlertDialog(context).then((value) {
-            if(value != null){
-              _savedRegions.add(Region(
-                identifier: value,
-              ));
-            }
-          });
-        },
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
-      ),
+                      ),
+                    )
+                  ]),
+            )
+          : (_beacons == null || _beacons.isEmpty)
+              ? Center(child: CircularProgressIndicator())
+              : SafeArea(
+                  child: Container(
+                    child: _buildBeaconFound(),
+                  ),
+                ),
     );
-
-  }
-
-  Future<String> createAlertDialog(BuildContext context){
-    TextEditingController customController = TextEditingController();
-    return showDialog(context: context, builder: (context){
-      return AlertDialog(
-        title: Text("Add Region:"),
-        content: TextField(
-          controller: customController,
-        ),
-        actions: <Widget>[
-          MaterialButton(
-            elevation: 5.0,
-            child: Text("Add"),
-            onPressed: () {
-              //customController is updated when the user inserts a text in the TextField,
-              //this variable contains what the user has written.
-              String toAdd = customController.text.toString();
-              Navigator.of(context).pop(toAdd);
-            },
-          )
-        ],
-      );
-    });
   }
 
   Widget _buildBeaconFound() {

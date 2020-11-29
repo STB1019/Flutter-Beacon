@@ -1,12 +1,20 @@
+import 'package:Beacon/manage_regions_page.dart';
 import 'package:Beacon/theme.dart';
 import 'package:flutter/material.dart';
 
+import 'package:flutter_beacon/flutter_beacon.dart';
+
 class BeaconDrawer extends StatefulWidget{
+  final List<Region> savedRegions;
+  BeaconDrawer(this.savedRegions);
   @override
-  _BeaconDrawerState createState() => _BeaconDrawerState();
+  _BeaconDrawerState createState() => _BeaconDrawerState(savedRegions);
 }
 
 class _BeaconDrawerState extends State<BeaconDrawer> {
+  final List<Region> savedRegions;
+  _BeaconDrawerState(this.savedRegions);
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -41,7 +49,12 @@ class _BeaconDrawerState extends State<BeaconDrawer> {
                 fontSize: 16,
               ),
             ),
-            onTap: () {}
+            onTap: () {
+              setState(() {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => ManageRegionsPage(savedRegions)));
+              });
+            }
           ),
           ListTile(
             title: Text(
@@ -80,29 +93,5 @@ class _BeaconDrawerState extends State<BeaconDrawer> {
         ],
       ),
     );
-  }
-
-  Future<String> createAlertDialog(BuildContext context){
-    TextEditingController customController = TextEditingController();
-    return showDialog(context: context, builder: (context){
-      return AlertDialog(
-        title: Text("Add Region:"),
-        content: TextField(
-          controller: customController,
-        ),
-        actions: <Widget>[
-          MaterialButton(
-            elevation: 5.0,
-            child: Text("Add"),
-            onPressed: () {
-              //customController is updated when the user inserts a text in the TextField,
-              //this variable contains what the user has written.
-              String toAdd = customController.text.toString();
-              Navigator.of(context).pop(toAdd);
-            },
-          )
-        ],
-      );
-    });
   }
 }
