@@ -7,8 +7,6 @@ class BeaconDrawer extends StatefulWidget{
 }
 
 class _BeaconDrawerState extends State<BeaconDrawer> {
-  bool darkModeOn = false;
-
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -42,7 +40,8 @@ class _BeaconDrawerState extends State<BeaconDrawer> {
               style: TextStyle(
                 fontSize: 16,
               ),
-            )
+            ),
+            onTap: () {}
           ),
           ListTile(
             title: Text(
@@ -81,5 +80,29 @@ class _BeaconDrawerState extends State<BeaconDrawer> {
         ],
       ),
     );
+  }
+
+  Future<String> createAlertDialog(BuildContext context){
+    TextEditingController customController = TextEditingController();
+    return showDialog(context: context, builder: (context){
+      return AlertDialog(
+        title: Text("Add Region:"),
+        content: TextField(
+          controller: customController,
+        ),
+        actions: <Widget>[
+          MaterialButton(
+            elevation: 5.0,
+            child: Text("Add"),
+            onPressed: () {
+              //customController is updated when the user inserts a text in the TextField,
+              //this variable contains what the user has written.
+              String toAdd = customController.text.toString();
+              Navigator.of(context).pop(toAdd);
+            },
+          )
+        ],
+      );
+    });
   }
 }

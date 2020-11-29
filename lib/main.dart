@@ -56,6 +56,8 @@ class HomePage extends StatefulWidget {
 
 //WidgetsBindingObserver is needed for performance, to stop the app when it goes on background
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  final _savedRegions = <Region>[];
+
   final StreamController<BluetoothState> streamController = StreamController();
   StreamSubscription<BluetoothState> _streamBluetooth;
   StreamSubscription<RangingResult> _streamRanging;
@@ -157,8 +159,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
 
     final regions = <Region>[];
+    regions.addAll(_savedRegions);
 
-    if (Platform.isIOS) {
+    /*if (Platform.isIOS) {
       // iOS platform, at least set identifier and proximityUUID for region scanning
       regions.add(Region(
           identifier: "mamma's beacons",
@@ -166,7 +169,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     } else {
       // android platform, it can ranging out of beacon that filter all of Proximity UUID
       regions.add(Region(identifier: 'com.beacon'));
-    }
+    }*/
     if (_streamRanging != null) {
       if (_streamRanging.isPaused) {
         _streamRanging.resume();
@@ -338,10 +341,47 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       child: _buildBeaconFound(),
                     ),
                   )*/
+      floatingActionButton: new FloatingActionButton(
+        onPressed: (){
+          print(_savedRegions.toString());
+          createAlertDialog(context).then((value) {
+            if(value != null){
+              _savedRegions.add(Region(
+                identifier: value,
+              ));
+            }
+          });
+        },
+        tooltip: 'Increment',
+        child: new Icon(Icons.add),
+      ),
     );
 
   }
 
+  Future<String> createAlertDialog(BuildContext context){
+    TextEditingController customController = TextEditingController();
+    return showDialog(context: context, builder: (context){
+      return AlertDialog(
+        title: Text("Add Region:"),
+        content: TextField(
+          controller: customController,
+        ),
+        actions: <Widget>[
+          MaterialButton(
+            elevation: 5.0,
+            child: Text("Add"),
+            onPressed: () {
+              //customController is updated when the user inserts a text in the TextField,
+              //this variable contains what the user has written.
+              String toAdd = customController.text.toString();
+              Navigator.of(context).pop(toAdd);
+            },
+          )
+        ],
+      );
+    });
+  }
 
   Widget _buildBeaconFound() {
     return ListView.builder(
