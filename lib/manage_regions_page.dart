@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_beacon/flutter_beacon.dart';
 
 class ManageRegionsPage extends StatefulWidget {
-  final List<Region> savedRegions;
+  final List<Region> _savedRegions;
 
-  ManageRegionsPage(this.savedRegions);
+  ManageRegionsPage(this._savedRegions);
 
   @override
   _ManageRegionsPageState createState() =>
-      _ManageRegionsPageState(savedRegions);
+      _ManageRegionsPageState(_savedRegions);
 }
 
 class _ManageRegionsPageState extends State<ManageRegionsPage> {
@@ -29,7 +29,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                 createAlertDialog(context).then((value) {
                   if (value != null) {
                     setState(() {
-                      addRegion(Region(identifier: value));
+                      addRegion(value);
                     });
                   }
                 });
@@ -96,29 +96,57 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
           fontWeight: FontWeight.bold,
         ),
       ),
+      subtitle: Text(
+        region.proximityUUID,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
-  Future<String> createAlertDialog(BuildContext context) async {
-    TextEditingController customController = TextEditingController();
+  Future<Region> createAlertDialog(BuildContext context) async {
+    final _formKey = GlobalKey<FormState>();
+    TextEditingController identifierController = TextEditingController();
+    TextEditingController uuidController = TextEditingController();
+
     return showDialog(context: context, builder: (context){
       return AlertDialog(
         title: Text("Add Region:"),
-        content: TextField(
-          controller: customController,
+        content: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Card(
+                  color: Theme.of(context).accentColor,
+                  child: TextFormField(
+                    controller: identifierController,
+                  ),
+                ),
+                Card(
+                  color: Theme.of(context).accentColor,
+                  child: TextFormField(
+                    controller: uuidController,
+                  ),
+                ),
+                MaterialButton(
+                  color: Theme.of(context).accentColor,
+                  elevation: 5.0,
+                  child: Text("Add"),
+                  onPressed: () {
+                    //customController is updated when the user inserts a text in the TextField,
+                    //this variable contains what the user has written.
+                    String newIdentifier = identifierController.text.toString();
+                    String newUuid = uuidController.text.toString();
+                    Region region = Region(identifier: newIdentifier, proximityUUID: newUuid);
+                    Navigator.of(context).pop(region);
+                  },
+                )
+              ],
+            ),
         ),
-        actions: <Widget>[
-          MaterialButton(
-            elevation: 5.0,
-            child: Text("Add"),
-            onPressed: () {
-              //customController is updated when the user inserts a text in the TextField,
-              //this variable contains what the user has written.
-              String toAdd = customController.text.toString();
-              Navigator.of(context).pop(toAdd);
-            },
-          )
-        ],
       );
     });
   }

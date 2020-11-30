@@ -62,7 +62,6 @@ class ThemeBuilderState extends State<ThemeBuilder>{
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return widget.builder(context, _brightness, _primaryColor, _accentColor);
@@ -73,19 +72,19 @@ class ThemeBuilderState extends State<ThemeBuilder>{
 
 class _ThemeInfo {
 
-  static const lightThemeBrightness = Brightness.light;
-  static const lightThemePrimaryColor = Colors.deepPurpleAccent;
-  static const lightThemeAccentColor = Colors.black26;
-  static const lightThemeTextTheme = TextTheme(
+  static const Brightness lightThemeBrightness = Brightness.light;
+  static const Color lightThemePrimaryColor = Colors.deepPurpleAccent;
+  static const Color lightThemeAccentColor = Color(0xffb19cd9);
+  static const TextTheme lightThemeTextTheme = TextTheme(
       headline1: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
       headline2: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
       bodyText2: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
     );
 
-  static const darkThemeBrightness = Brightness.dark;
-  static const darkThemePrimaryColor = Colors.orange;
-  static const darkThemeAccentColor = Colors.teal;
-  static const darkThemeTextTheme = TextTheme(
+  static const Brightness darkThemeBrightness = Brightness.dark;
+  static const Color darkThemePrimaryColor = Colors.orange;
+  static const Color darkThemeAccentColor = Colors.teal;
+  static const TextTheme darkThemeTextTheme = TextTheme(
     headline1: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
     headline2: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
     bodyText2: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),

@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_beacon/flutter_beacon.dart';
 
 class BeaconDrawer extends StatefulWidget{
-  final List<Region> savedRegions;
-  BeaconDrawer(this.savedRegions);
+  final List<Region> _savedRegions;
+  BeaconDrawer(this._savedRegions);
   @override
-  _BeaconDrawerState createState() => _BeaconDrawerState(savedRegions);
+  _BeaconDrawerState createState() => _BeaconDrawerState(_savedRegions);
 }
 
 class _BeaconDrawerState extends State<BeaconDrawer> {

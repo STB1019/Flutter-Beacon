@@ -260,7 +260,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         }
                       } else if (Platform.isIOS) {}
                     },
-                    color: Colors.white,
                   );
                 }
 
