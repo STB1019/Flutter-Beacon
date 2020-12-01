@@ -52,7 +52,7 @@ class HomePage extends StatefulWidget {
 
 //WidgetsBindingObserver is needed for performance, to stop the app when it goes on background
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  final _savedRegions = <Region>[];
+  final _savedRegions = <Region>[Region(identifier: 'gio', proximityUUID: "CB10023F-A318-3394-4199-A8730C7C1AEC")];
 
   final StreamController<BluetoothState> streamController = StreamController();
   StreamSubscription<BluetoothState> _streamBluetooth;
@@ -154,9 +154,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       return;
     }
 
-    final regions = <Region>[];
-    regions.addAll(_savedRegions);
-
     /*if (Platform.isIOS) {
       // iOS platform, at least set identifier and proximityUUID for region scanning
       regions.add(Region(
@@ -173,9 +170,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       }
     }
 
-    // see: https://github.com/alann-maulana/flutter_beacon for the difference between ranging beacons and monitoring beacons
-    _streamRanging =
-        flutterBeacon.ranging(regions).listen((RangingResult result) {
+    _streamRanging = flutterBeacon.ranging(_savedRegions).listen((RangingResult result) {
       // result contains a region and list of beacons found
       print(result);
       if (result != null && mounted) {
@@ -262,14 +257,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     },
                   );
                 }
-
                 return IconButton(
                   icon: Icon(Icons.bluetooth_disabled),
                   onPressed: () {},
                   color: Colors.grey,
                 );
               }
-
               return SizedBox.shrink();
             },
             stream: streamController.stream,
@@ -297,41 +290,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       body: (!authorizationStatusOk ||
               !locationServiceEnabled ||
               !bluetoothEnabled)
-          ? SafeArea(
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Image.asset(
-                        'assets/images/error_icon.png',
-                        color: Colors.amber[400],
-                        scale: 1.7,
-                      ),
-                    ),
-                    Center(
-                      child: Text(
-                        "Impossibile eseguire la scansione",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
-                      child: Center(
-                        child: Text(
-                          "Consentire l'accesso alla localizzazione e attivare il Bluetooth del dispositivo",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                    )
-                  ]),
-            )
+          ? _authorizationRequestPage()
           : (_beacons == null || _beacons.isEmpty)
               ? Center(child: CircularProgressIndicator())
               : SafeArea(
@@ -339,6 +298,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     child: _buildBeaconFound(),
                   ),
                 ),
+
+      floatingActionButton: FloatingActionButton(onPressed: () { print(_savedRegions); },),
+
     );
   }
 
@@ -376,5 +338,43 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 MaterialPageRoute(builder: (context) => BeaconPage(beacon)));
           });
         });
+  }
+
+  Widget _authorizationRequestPage() {
+    return SafeArea(
+      child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset(
+                'assets/images/error_icon.png',
+                color: Colors.amber[400],
+                scale: 1.7,
+              ),
+            ),
+            Center(
+              child: Text(
+                "Impossibile eseguire la scansione",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
+              child: Center(
+                child: Text(
+                  "Consentire l'accesso alla localizzazione e attivare il Bluetooth del dispositivo",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            )
+          ]),
+    );
   }
 }
