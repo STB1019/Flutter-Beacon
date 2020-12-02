@@ -98,8 +98,8 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                         builder: (context) {
                           return AlertDialog(
                             content: Text(
-                                'Indentifier: Name assigned to the Region.'
-                                'UUID stands for Universally Unique Identifier.'
+                                'Indentifier: Name assigned to the Region.\n\n'
+                                'UUID stands for Universally Unique Identifier.\n'
                                 'It contains 32 hexadecimal digits, split into 5 groups, separated by hyphens'),
                           );
                         });

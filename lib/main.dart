@@ -52,7 +52,13 @@ class HomePage extends StatefulWidget {
 
 //WidgetsBindingObserver is needed for performance, to stop the app when it goes on background
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  final _savedRegions = <Region>[Region(identifier: 'gio', proximityUUID: "CB10023F-A318-3394-4199-A8730C7C1AEC")];
+
+  int dubugCounter = 0;
+
+  final _savedRegions = <Region>[
+    Region(identifier: 'gio', proximityUUID: "CB10023F-A318-3394-4199-A8730C7C1AEC"),
+    Region(identifier: 'occhiodipavone', proximityUUID: "E610023F-A318-3394-4199-A8730C7C1AE2"),
+  ];
 
   final StreamController<BluetoothState> streamController = StreamController();
   StreamSubscription<BluetoothState> _streamBluetooth;
@@ -140,7 +146,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     });
   }
 
-  //On android i can scan without knowing the UUID's
+
   initScanBeacon() async {
     await flutterBeacon.initializeScanning;
     await checkAllRequirements();
@@ -154,21 +160,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       return;
     }
 
-    /*if (Platform.isIOS) {
-      // iOS platform, at least set identifier and proximityUUID for region scanning
-      regions.add(Region(
-          identifier: "mamma's beacons",
-          proximityUUID: 'CB10023F-A318-3394-4199-A8730C7C1AEC'));
-    } else {
-      // android platform, it can ranging out of beacon that filter all of Proximity UUID
-      regions.add(Region(identifier: 'com.beacon'));
-    }*/
-    if (_streamRanging != null) {
+    /*if (_streamRanging != null) {
       if (_streamRanging.isPaused) {
         _streamRanging.resume();
         return;
       }
-    }
+    }*/
+
+    //boh non capisco, se stoppo e riparto (commentando l'if sopra) il codice passa da qui, ma lo stramranging non prende in argomento la nuova Region
+    // -> entra in flutterBeacon.ranging: prova a vedere quel babbuino di _onRanging != null
+    print("o\no\no\no\no\no\no\n");
+    print(_savedRegions);
 
     _streamRanging = flutterBeacon.ranging(_savedRegions).listen((RangingResult result) {
       // result contains a region and list of beacons found
@@ -299,7 +301,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   ),
                 ),
 
-      floatingActionButton: FloatingActionButton(onPressed: () { print(_savedRegions); },),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.bug_report_outlined),
+        onPressed: () {
+          if (dubugCounter%2 == 0) _streamRanging.cancel();
+          else initScanBeacon();
+          dubugCounter++;
+        },
+      ),
 
     );
   }
