@@ -2,9 +2,6 @@ import 'package:Beacon/app/manage_regions_page.dart';
 import 'package:Beacon/app/theme.dart';
 import 'package:flutter/material.dart';
 
-
-import 'package:Beacon/flutter_beacon/flutter_beacon.dart';
-
 class BeaconDrawer extends StatefulWidget{
 
   BeaconDrawer();

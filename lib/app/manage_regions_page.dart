@@ -6,23 +6,20 @@ import 'package:flutter/material.dart';
 import 'package:Beacon/flutter_beacon/flutter_beacon.dart';
 import 'package:path_provider/path_provider.dart';
 
-
 class ManageRegionsPage extends StatefulWidget {
-
   ManageRegionsPage();
 
   @override
-  _ManageRegionsPageState createState() =>
-      _ManageRegionsPageState();
+  _ManageRegionsPageState createState() => _ManageRegionsPageState();
 }
 
 class _ManageRegionsPageState extends State<ManageRegionsPage> {
-  List<Region> savedRegions;
+  final savedRegions = <Region>[];
 
-  String savedRegionsFileName;
+  String savedRegionsFileName = "saved_regions.json";
   File jsonFile;
   Directory dir;
-  bool savedRegionsFileExists;
+  bool savedRegionsFileExists = false;
 
   _ManageRegionsPageState();
 
@@ -36,7 +33,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
       jsonFile = new File(dir.path + "/" + savedRegionsFileName);
       savedRegionsFileExists = jsonFile.existsSync();
     });
-    updateRegionList();
+    if (savedRegionsFileExists) updateRegionList();
   }
 
   @override
@@ -59,7 +56,6 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                   : _showNoRegionsPage()),
         ));
   }
-
 
   Widget _showNoRegionsPage() {
     return Column(
@@ -125,6 +121,15 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
           fontSize: 14,
           fontWeight: FontWeight.bold,
         ),
+      ),
+      trailing: IconButton(
+        icon: Icon(Icons.remove_circle_outline),
+        onPressed: (){
+          setState(() {
+            savedRegions.remove(region);
+            //c'è da fare un metodo apposito per toglierlo dal json
+          });
+        },
       ),
     );
   }
@@ -228,8 +233,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
 
                             Region region = Region(
                                 identifier: newIdentifier,
-                                proximityUUID: newUuid
-                            );
+                                proximityUUID: newUuid);
                             Navigator.of(context).pop(region);
                           }
                         },
@@ -243,7 +247,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
         });
   }
 
-  void _addRegion(){
+  void _addRegion() {
     _createRegionAlertDialog(context).then((value) {
       if (value != null) {
         setState(() {
@@ -254,17 +258,24 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
     });
   }
 
-  void createRegionsFile(List<Map<String, dynamic>> content, Directory dir, String fileName) {
+  void createRegionsFile(
+      List<Map<String, dynamic>> content, Directory dir, String fileName) {
     print("Creating file!");
     jsonFile = new File(dir.path + "/" + fileName);
     jsonFile.createSync();
-    setState(() {savedRegionsFileExists = true;});
+    setState(() {
+      savedRegionsFileExists = true;
+    });
+    savedRegionsFileExists = true;
     jsonFile.writeAsStringSync(json.encode(content));
   }
 
   void addRegionToJsonFile(Region region) {
     print("Writing to file!");
-    Map<String, dynamic> toAdd = {'identifier': region.identifier, 'proximityUUID': region.proximityUUID};
+    Map<String, dynamic> toAdd = {
+      'identifier': region.identifier,
+      'proximityUUID': region.proximityUUID
+    };
 
     if (savedRegionsFileExists) {
       print("File exists");
@@ -272,7 +283,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
       jsonFileContent.add(toAdd);
       jsonFile.writeAsStringSync(json.encode(jsonFileContent));
     }
-    if (!savedRegionsFileExists){
+    if (!savedRegionsFileExists) {
       print("File doesn't exist");
       List<Map<String, dynamic>> initList = new List<Map<String, dynamic>>();
       initList.add(toAdd);
@@ -280,17 +291,17 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
     }
 
     var fileContent = json.decode(jsonFile.readAsStringSync());
-    print("---------------\n" + fileContent.toString() + "\n----------------\n");
+    print(
+        "---------------\n" + fileContent.toString() + "\n----------------\n");
   }
 
-  void updateRegionList(){
+  void updateRegionList() {
     savedRegions.clear();
     List info = json.decode(jsonFile.readAsStringSync());
     for (Map element in info) {
       savedRegions.add(Region(
           identifier: element["identifier"],
-          proximityUUID: element["proximityUUID"]
-      ));
+          proximityUUID: element["proximityUUID"]));
     }
   }
 }
