@@ -31,11 +31,6 @@ dependencies:
   flutter_beacon: any
   path_provider: any
 
-  flutter_blue: any
-  uuid: any
-  sqflite: any
-  sqflite_common_ffi: any # LINUX/MACOS DB
-
 
 dev_dependencies:
   flutter_test:
@@ -47,7 +42,6 @@ dev_dependencies:
 # The following section is specific to Flutter.
 flutter:
   assets:
-    - assets/saved_regions.json
     - assets/images/error_icon.png
     - assets/images/background1.jpg
     - assets/images/not_found_icon.png

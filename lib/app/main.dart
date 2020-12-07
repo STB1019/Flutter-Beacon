@@ -1,16 +1,15 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:Beacon/app/beacon_page.dart';
-import 'package:Beacon/app/main_drawer.dart';
 import 'package:Beacon/app/theme.dart';
 
 import 'package:Beacon/flutter_beacon/flutter_beacon.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
+
+import 'main_drawer.dart';
 
 void main() => runApp(BeaconApp());
 
@@ -53,6 +52,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
+
 //WidgetsBindingObserver is needed for performance, to stop the app when it goes on background
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
@@ -67,38 +67,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   bool locationServiceEnabled = false;
   bool bluetoothEnabled = false;
 
-  File jsonFile;
-  Directory dir;
-  String fileName = "myJSONFile.json";
-  bool fileExists = false;
-
-
-  Future<List<Region>> getRegionsFromJson() async {
-    String contents = await rootBundle.loadString('assets/saved_regions.json');
-    List<dynamic> data = json.decode(contents);
-    List<Region> savedRegions;
-    data.forEach((element) {
-      savedRegions.add(Region(
-        identifier: element["identifier"],
-        proximityUUID: element["proximityUUID"]
-      ));
-    });
-    return savedRegions;
-    //_savedRegions.add(Region( ));
-  }
-
   //This method is executed first
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
-
-    getApplicationDocumentsDirectory().then((Directory directory) {
-      dir = directory;
-      jsonFile = new File(dir.path + "/" + fileName);
-      fileExists = jsonFile.existsSync();
-    });
-
     listeningState();
   }
 
@@ -194,8 +167,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     //boh non capisco, se stoppo e riparto (commentando l'if sopra) il codice passa da qui, ma lo stramranging non prende in argomento la nuova Region
     // -> entra in flutterBeacon.ranging: prova a vedere quel babbuino di _onRanging != null
     print("o\no\no\no\no\no\no\n");
-    print(getRegionsFromJson());
-
     _streamRanging = flutterBeacon.ranging(_savedRegions).listen((RangingResult result) {
       // result contains a region and list of beacons found
       print(result);
@@ -233,10 +204,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //drawer: BeaconDrawer(),
-      drawer: BeaconDrawer(_savedRegions, jsonFile, dir, fileExists),
+      drawer: BeaconDrawer(),
       appBar: AppBar(
-        //backgroundColor: Theme.of(context).primaryColor,
         title: Text("Beacon BLE Scanner"),
         actions: <Widget>[
           //When pressed, the app requests an authorization to access the device's location

@@ -4,35 +4,39 @@ import 'dart:io';
 import 'package:Beacon/app/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:Beacon/flutter_beacon/flutter_beacon.dart';
+import 'package:path_provider/path_provider.dart';
 
 
 class ManageRegionsPage extends StatefulWidget {
-  List<Region> _savedRegions;
-  File jsonFile;
-  Directory dir;
-  bool regionsFileExists;
 
-  ManageRegionsPage(this._savedRegions, this.jsonFile, this.dir, this.regionsFileExists);
+  ManageRegionsPage();
 
   @override
   _ManageRegionsPageState createState() =>
-      _ManageRegionsPageState(_savedRegions, jsonFile, dir, regionsFileExists);
+      _ManageRegionsPageState();
 }
 
 class _ManageRegionsPageState extends State<ManageRegionsPage> {
-
   List<Region> savedRegions;
+
+  String savedRegionsFileName;
   File jsonFile;
   Directory dir;
-  bool regionsFileExists;
+  bool savedRegionsFileExists;
 
-  _ManageRegionsPageState(this.savedRegions, this.jsonFile, this.dir, this.regionsFileExists);
+  _ManageRegionsPageState();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
+    getApplicationDocumentsDirectory().then((Directory directory) {
+      dir = directory;
+      jsonFile = new File(dir.path + "/" + savedRegionsFileName);
+      savedRegionsFileExists = jsonFile.existsSync();
+    });
+    updateRegionList();
   }
 
   @override
@@ -243,51 +247,50 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
     _createRegionAlertDialog(context).then((value) {
       if (value != null) {
         setState(() {
-          savedRegions.clear();
-          updateRegionFile(value);
-          List info = json.decode(jsonFile.readAsStringSync());
-          for (Map element in info) {
-            savedRegions.add(Region(
-              identifier: element["identifier"],
-              proximityUUID: element["proximityUUID"]
-            ));
-          }
+          addRegionToJsonFile(value);
+          updateRegionList();
         });
       }
     });
   }
 
-
-  //devo cambiare il json in modo tale che mi contenga una LISTA di mappe, le quali hanno chiavi identifier e UUID
   void createRegionsFile(List<Map<String, dynamic>> content, Directory dir, String fileName) {
     print("Creating file!");
     jsonFile = new File(dir.path + "/" + fileName);
     jsonFile.createSync();
-    setState(() {
-      regionsFileExists = true;
-    });
+    setState(() {savedRegionsFileExists = true;});
     jsonFile.writeAsStringSync(json.encode(content));
   }
 
-  void updateRegionFile(Region region) {
+  void addRegionToJsonFile(Region region) {
     print("Writing to file!");
     Map<String, dynamic> toAdd = {'identifier': region.identifier, 'proximityUUID': region.proximityUUID};
 
-    if (regionsFileExists) {
+    if (savedRegionsFileExists) {
       print("File exists");
       var jsonFileContent = json.decode(jsonFile.readAsStringSync());
       jsonFileContent.add(toAdd);
       jsonFile.writeAsStringSync(json.encode(jsonFileContent));
     }
-    if (!regionsFileExists){
+    if (!savedRegionsFileExists){
       print("File doesn't exist");
       List<Map<String, dynamic>> initList = new List<Map<String, dynamic>>();
       initList.add(toAdd);
-      createRegionsFile(initList, dir, "saved_regions.json");
+      createRegionsFile(initList, dir, savedRegionsFileName);
     }
 
     var fileContent = json.decode(jsonFile.readAsStringSync());
     print("---------------\n" + fileContent.toString() + "\n----------------\n");
   }
 
+  void updateRegionList(){
+    savedRegions.clear();
+    List info = json.decode(jsonFile.readAsStringSync());
+    for (Map element in info) {
+      savedRegions.add(Region(
+          identifier: element["identifier"],
+          proximityUUID: element["proximityUUID"]
+      ));
+    }
+  }
 }
