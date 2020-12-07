@@ -1,21 +1,39 @@
-import 'package:Beacon/theme.dart';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:Beacon/app/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_beacon/flutter_beacon.dart';
+import 'package:Beacon/flutter_beacon/flutter_beacon.dart';
+
 
 class ManageRegionsPage extends StatefulWidget {
-  final List<Region> _savedRegions;
+  List<Region> _savedRegions;
+  File jsonFile;
+  Directory dir;
+  bool regionsFileExists;
 
-  ManageRegionsPage(this._savedRegions);
+  ManageRegionsPage(this._savedRegions, this.jsonFile, this.dir, this.regionsFileExists);
 
   @override
   _ManageRegionsPageState createState() =>
-      _ManageRegionsPageState(_savedRegions);
+      _ManageRegionsPageState(_savedRegions, jsonFile, dir, regionsFileExists);
 }
 
 class _ManageRegionsPageState extends State<ManageRegionsPage> {
-  final List<Region> savedRegions;
 
-  _ManageRegionsPageState(this.savedRegions);
+  List<Region> savedRegions;
+  File jsonFile;
+  Directory dir;
+  bool regionsFileExists;
+
+  _ManageRegionsPageState(this.savedRegions, this.jsonFile, this.dir, this.regionsFileExists);
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +54,48 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                   ? _buildRegion()
                   : _showNoRegionsPage()),
         ));
+  }
+
+
+  Widget _showNoRegionsPage() {
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.asset(
+              'assets/images/not_found_icon.png',
+              color: ThemeBuilder.of(context).isDarkModeOn()
+                  ? Colors.white
+                  : Colors.black,
+              scale: 1.5,
+            ),
+          ),
+          Center(
+            child: Text(
+              "Nessuna Regione salvata",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
+            child: Center(
+              child: MaterialButton(
+                child: Text(
+                  "Aggiungi una Regione",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                  ),
+                ),
+                onPressed: () => _addRegion(),
+              ),
+            ),
+          )
+        ]);
   }
 
   Widget _buildRegion() {
@@ -63,16 +123,6 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
         ),
       ),
     );
-  }
-
-  void _addRegion(){
-    _createRegionAlertDialog(context).then((value) {
-      if (value != null) {
-        setState(() {
-          savedRegions.add(value);
-        });
-      }
-    });
   }
 
   Future<Region> _createRegionAlertDialog(BuildContext context) async {
@@ -189,45 +239,55 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
         });
   }
 
-  Column _showNoRegionsPage() {
-    return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Image.asset(
-              'assets/images/not_found_icon.png',
-              color: ThemeBuilder.of(context).isDarkModeOn()
-                  ? Colors.white
-                  : Colors.black,
-              scale: 1.5,
-            ),
-          ),
-          Center(
-            child: Text(
-              "Nessuna Regione salvata",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
-            child: Center(
-              child: MaterialButton(
-                child: Text(
-                  "Aggiungi una Regione",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                  ),
-                ),
-                onPressed: () => _addRegion(),
-              ),
-            ),
-          )
-        ]);
+  void _addRegion(){
+    _createRegionAlertDialog(context).then((value) {
+      if (value != null) {
+        setState(() {
+          savedRegions.clear();
+          updateRegionFile(value);
+          List info = json.decode(jsonFile.readAsStringSync());
+          for (Map element in info) {
+            savedRegions.add(Region(
+              identifier: element["identifier"],
+              proximityUUID: element["proximityUUID"]
+            ));
+          }
+        });
+      }
+    });
+  }
+
+
+  //devo cambiare il json in modo tale che mi contenga una LISTA di mappe, le quali hanno chiavi identifier e UUID
+  void createRegionsFile(List<Map<String, dynamic>> content, Directory dir, String fileName) {
+    print("Creating file!");
+    jsonFile = new File(dir.path + "/" + fileName);
+    jsonFile.createSync();
+    setState(() {
+      regionsFileExists = true;
+    });
+    jsonFile.writeAsStringSync(json.encode(content));
+  }
+
+  void updateRegionFile(Region region) {
+    print("Writing to file!");
+    Map<String, dynamic> toAdd = {'identifier': region.identifier, 'proximityUUID': region.proximityUUID};
+
+    if (regionsFileExists) {
+      print("File exists");
+      var jsonFileContent = json.decode(jsonFile.readAsStringSync());
+      jsonFileContent.add(toAdd);
+      jsonFile.writeAsStringSync(json.encode(jsonFileContent));
+    }
+    if (!regionsFileExists){
+      print("File doesn't exist");
+      List<Map<String, dynamic>> initList = new List<Map<String, dynamic>>();
+      initList.add(toAdd);
+      createRegionsFile(initList, dir, "saved_regions.json");
+    }
+
+    var fileContent = json.decode(jsonFile.readAsStringSync());
+    print("---------------\n" + fileContent.toString() + "\n----------------\n");
   }
 
 }

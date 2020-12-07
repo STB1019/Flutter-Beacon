@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_beacon/flutter_beacon.dart';
+import 'package:Beacon/flutter_beacon/flutter_beacon.dart';
 
 class BeaconPage extends StatelessWidget {
   final Beacon beacon;
