@@ -14,26 +14,24 @@ class ManageRegionsPage extends StatefulWidget {
 }
 
 class _ManageRegionsPageState extends State<ManageRegionsPage> {
-  final savedRegions = <Region>[];
 
+  _ManageRegionsPageState();
+
+  final savedRegions = <Region>[];
   String savedRegionsFileName = "saved_regions.json";
   File jsonFile;
   Directory dir;
   bool savedRegionsFileExists = false;
 
-  _ManageRegionsPageState();
-
   @override
   void initState() {
-    // TODO: implement initState
-    super.initState();
-
     getApplicationDocumentsDirectory().then((Directory directory) {
       dir = directory;
       jsonFile = new File(dir.path + "/" + savedRegionsFileName);
       savedRegionsFileExists = jsonFile.existsSync();
+      if (savedRegionsFileExists) _updateRegionList();
     });
-    if (savedRegionsFileExists) updateRegionList();
+    super.initState();
   }
 
   @override
@@ -50,11 +48,28 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
         ),
         body: SafeArea(
           child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: savedRegions.length != 0
-                  ? _buildRegion()
-                  : _showNoRegionsPage()),
-        ));
+            padding: const EdgeInsets.all(8.0),
+            child: FutureBuilder(
+              future: _checkSavedRegions(),
+              builder: (context, snapshot) {
+                if(snapshot.connectionState == ConnectionState.done) {
+                  if (snapshot.data) return _buildRegion();
+                  return _showNoRegionsPage();
+                }
+                else return CircularProgressIndicator();
+              },
+            ),
+          ),
+        )
+    );
+  }
+
+  Future<bool> _checkSavedRegions() async {
+    var directory = await getApplicationDocumentsDirectory();
+    jsonFile = new File(directory.path + "/" + savedRegionsFileName);
+    if (jsonFile.existsSync()) _updateRegionList();
+    if (savedRegions.length > 0) return true;
+    return false;
   }
 
   Widget _showNoRegionsPage() {
@@ -118,7 +133,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
       subtitle: Text(
         region.proximityUUID,
         style: TextStyle(
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -126,8 +141,10 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
         icon: Icon(Icons.remove_circle_outline),
         onPressed: (){
           setState(() {
-            savedRegions.remove(region);
+            //savedRegions.remove(region);
             //c'è da fare un metodo apposito per toglierlo dal json
+            _removeRegion(region);
+            _updateRegionList();
           });
         },
       ),
@@ -251,26 +268,36 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
     _createRegionAlertDialog(context).then((value) {
       if (value != null) {
         setState(() {
-          addRegionToJsonFile(value);
-          updateRegionList();
+          _addRegionToJsonFile(value);
+          _updateRegionList();
         });
       }
     });
   }
 
-  void createRegionsFile(
-      List<Map<String, dynamic>> content, Directory dir, String fileName) {
+  void _removeRegion(Region r){
+    print("Writing to file!");
+    var jsonFileContent = json.decode(jsonFile.readAsStringSync());
+    var toRemove;
+    for (Map element in jsonFileContent) {
+      if(element["identifier"] == r.identifier && element["proximityUUID"] == r.proximityUUID)
+        toRemove = element;
+    }
+    if(toRemove != null) jsonFileContent.remove(toRemove);
+    jsonFile.writeAsStringSync(json.encode(jsonFileContent));
+  }
+
+  void createRegionsFile(List<Map<String, dynamic>> content, Directory dir, String fileName) {
     print("Creating file!");
     jsonFile = new File(dir.path + "/" + fileName);
     jsonFile.createSync();
     setState(() {
       savedRegionsFileExists = true;
     });
-    savedRegionsFileExists = true;
     jsonFile.writeAsStringSync(json.encode(content));
   }
 
-  void addRegionToJsonFile(Region region) {
+  void _addRegionToJsonFile(Region region) {
     print("Writing to file!");
     Map<String, dynamic> toAdd = {
       'identifier': region.identifier,
@@ -289,13 +316,9 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
       initList.add(toAdd);
       createRegionsFile(initList, dir, savedRegionsFileName);
     }
-
-    var fileContent = json.decode(jsonFile.readAsStringSync());
-    print(
-        "---------------\n" + fileContent.toString() + "\n----------------\n");
   }
 
-  void updateRegionList() {
+  void _updateRegionList() {
     savedRegions.clear();
     List info = json.decode(jsonFile.readAsStringSync());
     for (Map element in info) {

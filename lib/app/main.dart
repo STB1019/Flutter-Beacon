@@ -8,6 +8,7 @@ import 'package:Beacon/flutter_beacon/flutter_beacon.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'main_drawer.dart';
 
@@ -56,7 +57,12 @@ class HomePage extends StatefulWidget {
 //WidgetsBindingObserver is needed for performance, to stop the app when it goes on background
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
-  final _savedRegions = <Region>[];
+  //this can be done only for android
+  final _savedRegions = <Region>[new Region(identifier: "")];
+  String savedRegionsFileName = "saved_regions.json";
+  File jsonFile;
+  Directory dir;
+  bool savedRegionsFileExists = false;
 
   final StreamController<BluetoothState> streamController = StreamController();
   StreamSubscription<BluetoothState> _streamBluetooth;
@@ -73,6 +79,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
     listeningState();
+
+    getApplicationDocumentsDirectory().then((Directory directory) {
+      dir = directory;
+      jsonFile = new File(dir.path + "/" + savedRegionsFileName);
+      savedRegionsFileExists = jsonFile.existsSync();
+    });
   }
 
   @override
@@ -157,16 +169,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       return;
     }
 
-    /*if (_streamRanging != null) {
+    if (_streamRanging != null) {
       if (_streamRanging.isPaused) {
         _streamRanging.resume();
         return;
       }
-    }*/
+    }
 
-    //boh non capisco, se stoppo e riparto (commentando l'if sopra) il codice passa da qui, ma lo stramranging non prende in argomento la nuova Region
-    // -> entra in flutterBeacon.ranging: prova a vedere quel babbuino di _onRanging != null
-    print("o\no\no\no\no\no\no\n");
+    //we have only an identifier, without a proximityUUID, so it works only for android and it ranges every beacon
     _streamRanging = flutterBeacon.ranging(_savedRegions).listen((RangingResult result) {
       // result contains a region and list of beacons found
       print(result);
