@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:Beacon/app/beacon_page.dart';
@@ -53,12 +54,10 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-
 //WidgetsBindingObserver is needed for performance, to stop the app when it goes on background
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-
   //this can be done only for android
-  final _savedRegions = <Region>[new Region(identifier: "")];
+  final _savedRegions = <Region>[];
   String savedRegionsFileName = "saved_regions.json";
   File jsonFile;
   Directory dir;
@@ -177,7 +176,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
 
     //we have only an identifier, without a proximityUUID, so it works only for android and it ranges every beacon
-    _streamRanging = flutterBeacon.ranging(_savedRegions).listen((RangingResult result) {
+    _streamRanging = flutterBeacon.ranging(
+        <Region>[new Region(identifier: "")]).listen((RangingResult result) {
       // result contains a region and list of beacons found
       print(result);
       if (result != null && mounted) {
@@ -209,7 +209,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (compare == 0) compare = a.minor.compareTo(b.minor);
     return compare;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -278,36 +277,88 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       ),
 
       //ONLY FOR TESTING GRAPHICS
-      /*body: SafeArea(
-           child: Card(
-             child: _buildRow(Beacon(
-               proximityUUID:
-               'CB10023F-A318-3394-4199-A8730C7C1AEC',
-               macAddress: '00:0a:95:9d:68:16',
-               major: 3,
-               minor: 41,
-               rssi: -76,
-               txPower: -60,
-               accuracy: 2.43,
-             )),
-           ),
-         ),*/
-
-      body: (!authorizationStatusOk ||
-              !locationServiceEnabled ||
-              !bluetoothEnabled)
-          ? _authorizationRequestPage()
-          : (_beacons == null || _beacons.isEmpty)
-              ? Center(child: CircularProgressIndicator())
-              : SafeArea(
-                  child: Container(
-                    child: _buildBeaconFound(),
+       body: FutureBuilder(
+          future: updateRegionList(),
+          builder: (context, snapshot) {
+            return SafeArea(
+              child: ListView(
+                children: [
+                  Card(
+                    child: _buildRow(Beacon(
+                      proximityUUID: 'CB10023F-A318-3394-4199-A8730C7C1AEC',
+                      macAddress: '00:0a:95:9d:68:16',
+                      major: 3,
+                      minor: 41,
+                      rssi: -76,
+                      txPower: -60,
+                      accuracy: 2.43,
+                    )),
                   ),
+                  Card(
+                    child: _buildRow(Beacon(
+                      proximityUUID: 'AF10343D-A368-31A4-4D9E-CC73001C1FEA',
+                      macAddress: '00:0b:97:3d:58:1f',
+                      major: 6,
+                      minor: 42,
+                      rssi: -76,
+                      txPower: -60,
+                      accuracy: 2.43,
+                    )),
+                  ),
+                ],
+              ),
+            );
+          }),
+
+      /*body: FutureBuilder(
+          future: updateRegionList(),
+          builder: (context, snapshot) {
+            if (!authorizationStatusOk ||
+                !locationServiceEnabled ||
+                !bluetoothEnabled) return _authorizationRequestPage();
+            if (_beacons == null ||
+                _beacons.isEmpty ||
+                snapshot.connectionState != ConnectionState.done)
+              return Center(child: CircularProgressIndicator());
+            else
+              return SafeArea(
+                child: Container(
+                  child: _buildBeaconFound(),
                 ),
+              );
+          }),*/
     );
   }
 
+  Future<void> updateRegionList() async {
+    var directory = await getApplicationDocumentsDirectory();
+    jsonFile = new File(directory.path + "/" + savedRegionsFileName);
+    if (jsonFile.existsSync()) {
+      _savedRegions.clear();
+      List info = json.decode(jsonFile.readAsStringSync());
+      for (Map element in info) {
+        _savedRegions.add(Region(
+            identifier: element["identifier"],
+            proximityUUID: element["proximityUUID"]));
+      }
+    }
+  }
+
   Widget _buildBeaconFound() {
+    final toRemove = <Beacon>[];
+    for (Beacon beacon in _beacons) {
+      bool isScanned = false;
+      for (Region region in _savedRegions) {
+        if (beacon.proximityUUID == region.proximityUUID) {
+          isScanned = true;
+          break;
+        }
+      }
+      if(!isScanned) toRemove.add(beacon);
+    }
+    _beacons.removeWhere((element) => toRemove.contains(element));
+
+    if (_beacons.isEmpty) return Center(child: CircularProgressIndicator());
     return ListView.builder(
         itemCount: _beacons.length,
         itemBuilder: (context, index) {
@@ -337,8 +388,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         ),
         onTap: () {
           setState(() {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => BeaconPage(beacon)));
+            Region beaconRegion = new Region(identifier: "Sconosciuto");
+            for (Region element in _savedRegions) {
+              if (beacon.proximityUUID == element.proximityUUID) {
+                beaconRegion = element;
+                break;
+              }
+            }
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => BeaconPage(beacon, beaconRegion)));
           });
         });
   }

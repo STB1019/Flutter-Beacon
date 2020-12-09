@@ -31,7 +31,7 @@ class _BeaconDrawerState extends State<BeaconDrawer> {
               Positioned(
                   bottom: 12.0,
                   left: 16.0,
-                  child: Text("Flutter Step-by-Step",
+                  child: Text("Settings",
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 20.0,

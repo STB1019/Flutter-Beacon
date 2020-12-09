@@ -3,8 +3,9 @@ import 'package:Beacon/flutter_beacon/flutter_beacon.dart';
 
 class BeaconPage extends StatelessWidget {
   final Beacon beacon;
+  final Region beaconRegion;
 
-  BeaconPage(this.beacon);
+  BeaconPage(this.beacon, this.beaconRegion);
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +22,12 @@ class BeaconPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          "Sconosciuto",
+                          beaconRegion.identifier,
                           textAlign: TextAlign.left,
                           style: TextStyle(
                             color: Colors.lightBlue,
@@ -33,8 +36,8 @@ class BeaconPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Spacer(),
-                      Container(
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
                         child: GestureDetector(
                           child: Icon(Icons.star_border),
                           onTap: () {},

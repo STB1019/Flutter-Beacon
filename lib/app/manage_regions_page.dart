@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:Beacon/app/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:Beacon/flutter_beacon/flutter_beacon.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ManageRegionsPage extends StatefulWidget {
@@ -14,7 +15,6 @@ class ManageRegionsPage extends StatefulWidget {
 }
 
 class _ManageRegionsPageState extends State<ManageRegionsPage> {
-
   _ManageRegionsPageState();
 
   final savedRegions = <Region>[];
@@ -52,16 +52,15 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
             child: FutureBuilder(
               future: _checkSavedRegions(),
               builder: (context, snapshot) {
-                if(snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.connectionState == ConnectionState.done) {
                   if (snapshot.data) return _buildRegion();
                   return _showNoRegionsPage();
-                }
-                else return CircularProgressIndicator();
+                } else
+                  return CircularProgressIndicator();
               },
             ),
           ),
-        )
-    );
+        ));
   }
 
   Future<bool> _checkSavedRegions() async {
@@ -103,7 +102,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                   "Aggiungi una Regione",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 12,
                   ),
                 ),
                 onPressed: () => _addRegion(),
@@ -114,39 +113,67 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
   }
 
   Widget _buildRegion() {
-    return ListView.builder(
+    return ListView.separated(
+        separatorBuilder: (context, index) => Divider(),
         itemCount: savedRegions.length,
         itemBuilder: (context, index) {
-          return Card(child: _buildRow(savedRegions[index]));
+          return _buildRow(savedRegions[index]);
         });
   }
 
   Widget _buildRow(Region region) {
-    return ListTile(
-      title: Text(
-        region.identifier,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
+    return Dismissible(
+      key: ObjectKey(region),
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) {
+        setState(() {
+          _removeRegion(region);
+        });
+      },
+      background: Container(
+        color: Colors.red[400],
+        alignment: Alignment.centerRight,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: FaIcon(
+            FontAwesomeIcons.trash,
+            color: Colors.white,
+          ),
         ),
       ),
-      subtitle: Text(
-        region.proximityUUID,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      trailing: IconButton(
-        icon: Icon(Icons.remove_circle_outline),
-        onPressed: (){
-          setState(() {
-            //savedRegions.remove(region);
-            //c'è da fare un metodo apposito per toglierlo dal json
-            _removeRegion(region);
-            _updateRegionList();
-          });
+      child: ListTile(
+        onLongPress: () {
+          return showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  content: GestureDetector(
+                    child: Text("Delete Region"),
+                    onTap: (){
+                      Navigator.of(context).pop();
+                      setState(() {
+                        _removeRegion(region);
+                        _updateRegionList();
+                      });
+                    },
+                  ),
+                );
+              });
         },
+        title: Text(
+          "Identifier: " + region.identifier,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          region.proximityUUID,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
@@ -238,13 +265,13 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                             String newIdentifier =
                                 identifierController.text.toString();
                             String newUuid = uuidController.text.toString();
-                            newUuid = newUuid.substring(0, 7).toUpperCase() +
+                            newUuid = newUuid.substring(0, 8).toUpperCase() +
                                 "-" +
-                                newUuid.substring(7, 11).toUpperCase() +
+                                newUuid.substring(8, 12).toUpperCase() +
                                 "-" +
-                                newUuid.substring(11, 15).toUpperCase() +
+                                newUuid.substring(12, 16).toUpperCase() +
                                 "-" +
-                                newUuid.substring(15, 19).toUpperCase() +
+                                newUuid.substring(16, 20).toUpperCase() +
                                 "-" +
                                 newUuid.substring(20).toUpperCase();
 
@@ -275,19 +302,20 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
     });
   }
 
-  void _removeRegion(Region r){
+  void _removeRegion(Region r) {
     print("Writing to file!");
     var jsonFileContent = json.decode(jsonFile.readAsStringSync());
     var toRemove;
     for (Map element in jsonFileContent) {
-      if(element["identifier"] == r.identifier && element["proximityUUID"] == r.proximityUUID)
-        toRemove = element;
+      if (element["identifier"] == r.identifier &&
+          element["proximityUUID"] == r.proximityUUID) toRemove = element;
     }
-    if(toRemove != null) jsonFileContent.remove(toRemove);
+    if (toRemove != null) jsonFileContent.remove(toRemove);
     jsonFile.writeAsStringSync(json.encode(jsonFileContent));
   }
 
-  void createRegionsFile(List<Map<String, dynamic>> content, Directory dir, String fileName) {
+  void createRegionsFile(
+      List<Map<String, dynamic>> content, Directory dir, String fileName) {
     print("Creating file!");
     jsonFile = new File(dir.path + "/" + fileName);
     jsonFile.createSync();

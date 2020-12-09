@@ -30,6 +30,7 @@ dependencies:
   provider: any
   flutter_beacon: any
   path_provider: any
+  font_awesome_flutter: any
 
 
 dev_dependencies:
