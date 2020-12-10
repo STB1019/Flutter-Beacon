@@ -58,10 +58,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   //this can be done only for android
   final _savedRegions = <Region>[];
+  final _savedBeacons = <Beacon>[];
   String savedRegionsFileName = "saved_regions.json";
-  File jsonFile;
+  String savedBeaconsFileName = "saved_beacons.json";
+  File jsonSavedRegionsFile;
+  File jsonSavedBeaconsFile;
   Directory dir;
-  bool savedRegionsFileExists = false;
 
   final StreamController<BluetoothState> streamController = StreamController();
   StreamSubscription<BluetoothState> _streamBluetooth;
@@ -81,8 +83,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     getApplicationDocumentsDirectory().then((Directory directory) {
       dir = directory;
-      jsonFile = new File(dir.path + "/" + savedRegionsFileName);
-      savedRegionsFileExists = jsonFile.existsSync();
+      jsonSavedRegionsFile = new File(dir.path + "/" + savedRegionsFileName);
+      jsonSavedBeaconsFile = new File(dir.path + "/" + savedBeaconsFileName);
     });
   }
 
@@ -277,7 +279,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       ),
 
       //ONLY FOR TESTING GRAPHICS
-       body: FutureBuilder(
+      /*body: FutureBuilder(
           future: updateRegionList(),
           builder: (context, snapshot) {
             return SafeArea(
@@ -308,34 +310,44 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ],
               ),
             );
-          }),
+          }),*/
 
-      /*body: FutureBuilder(
-          future: updateRegionList(),
+      body: FutureBuilder(
+          future: updateSavedInfo(),
           builder: (context, snapshot) {
             if (!authorizationStatusOk ||
                 !locationServiceEnabled ||
                 !bluetoothEnabled) return _authorizationRequestPage();
-            if (_beacons == null ||
-                _beacons.isEmpty ||
-                snapshot.connectionState != ConnectionState.done)
+            if (snapshot.connectionState != ConnectionState.done ||
+                _beacons == null)
               return Center(child: CircularProgressIndicator());
-            else
+            if (_beacons.isEmpty) {
+              if (_savedBeacons.isNotEmpty) {
+                return _buildBeaconFound();
+              } else
+                return Center(child: CircularProgressIndicator());
+            } else
               return SafeArea(
                 child: Container(
                   child: _buildBeaconFound(),
                 ),
               );
-          }),*/
+          }),
     );
+  }
+
+  Future<void> updateSavedInfo() async {
+    updateRegionList();
+    updateBeaconList();
   }
 
   Future<void> updateRegionList() async {
     var directory = await getApplicationDocumentsDirectory();
-    jsonFile = new File(directory.path + "/" + savedRegionsFileName);
-    if (jsonFile.existsSync()) {
+    jsonSavedRegionsFile =
+        new File(directory.path + "/" + savedRegionsFileName);
+    if (jsonSavedRegionsFile.existsSync()) {
       _savedRegions.clear();
-      List info = json.decode(jsonFile.readAsStringSync());
+      List info = json.decode(jsonSavedRegionsFile.readAsStringSync());
       for (Map element in info) {
         _savedRegions.add(Region(
             identifier: element["identifier"],
@@ -344,7 +356,30 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> updateBeaconList() async {
+    var directory = await getApplicationDocumentsDirectory();
+    jsonSavedRegionsFile =
+        new File(directory.path + "/" + savedBeaconsFileName);
+    if (jsonSavedBeaconsFile.existsSync()) {
+      _savedBeacons.clear();
+      List info = json.decode(jsonSavedBeaconsFile.readAsStringSync());
+      for (Map element in info) {
+        _savedBeacons.add(Beacon(
+          proximityUUID: element["proximityUUID"],
+          major: element["major"],
+          minor: element["minor"],
+          macAddress: element["macAddress"],
+          rssi: element["rssi"],
+          txPower: element["txPower"],
+          accuracy: element["accuracy"],
+        ));
+      }
+    }
+  }
+
   Widget _buildBeaconFound() {
+
+    //i delete the beacons in the regions that I'm not ranging
     final toRemove = <Beacon>[];
     for (Beacon beacon in _beacons) {
       bool isScanned = false;
@@ -354,23 +389,43 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           break;
         }
       }
-      if(!isScanned) toRemove.add(beacon);
+      if (!isScanned) toRemove.add(beacon);
     }
     _beacons.removeWhere((element) => toRemove.contains(element));
 
-    if (_beacons.isEmpty) return Center(child: CircularProgressIndicator());
+    //Before adding the saved beacons, I build a "map" to recognize if the beacon is saved or not
+    //I made a list of MapEntry because i can access the elements by index
+    List<MapEntry<Beacon, bool>> beaconSavedMap = new List();
+    beaconSavedMap.addAll(_beacons.map((e) => MapEntry(e, false)));
+
+    for (Beacon saved in _savedBeacons) {
+      bool toAdd = true;
+      for (Beacon b in _beacons) {
+        if (b.proximityUUID == saved.proximityUUID &&
+            b.major == saved.major &&
+            b.minor == saved.minor) {
+          toAdd = false;
+          break;
+        }
+      }
+      if (toAdd) beaconSavedMap.add(new MapEntry(saved, true));
+    }
+
+    if (beaconSavedMap.isEmpty) return Center(child: CircularProgressIndicator());
+
     return ListView.builder(
-        itemCount: _beacons.length,
+        itemCount: beaconSavedMap.length,
         itemBuilder: (context, index) {
-          return Card(child: _buildRow(_beacons[index]));
+          return Card(child: _buildRow(beaconSavedMap[index].key, beaconSavedMap[index].value));
         });
   }
 
-  Widget _buildRow(Beacon beacon) {
+  Widget _buildRow(Beacon beacon, bool isSaved) {
+
     return ListTile(
         leading: Icon(
           Icons.bluetooth_audio_rounded,
-          color: Colors.blue,
+          color: isSaved ? Colors.grey : Colors.blue,
           size: 40,
         ),
         title: Text(
