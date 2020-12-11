@@ -149,7 +149,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                 return AlertDialog(
                   content: GestureDetector(
                     child: Text("Delete Region"),
-                    onTap: (){
+                    onTap: () {
                       Navigator.of(context).pop();
                       setState(() {
                         _removeRegion(region);
@@ -160,13 +160,31 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                 );
               });
         },
-        title: Text(
+        title: RichText(
+          text: TextSpan(
+              text: "Identifier: ",
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyText1.color,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              children: <TextSpan>[
+                TextSpan(
+                  text: region.identifier,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ]),
+        ),
+        /*Text(
           "Identifier: " + region.identifier,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
-        ),
+        ),*/
         subtitle: Text(
           region.proximityUUID,
           style: TextStyle(
@@ -223,6 +241,8 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                         validator: (String value) {
                           if (value.length == 0)
                             return "Identifier can't be null";
+                          if (value.length > 16)
+                            return "Id must have max 16 chars";
                           return null;
                         },
                         decoration: InputDecoration(
@@ -231,7 +251,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                           border: OutlineInputBorder(),
                         ),
                         controller: identifierController,
-                        maxLength: 30,
+                        maxLength: 16,
                       ),
                     ),
                     Padding(

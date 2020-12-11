@@ -115,10 +115,6 @@ class _BeaconPageState extends State<BeaconPage> {
                       fontWeight: FontWeight.bold,
                     )),
                 subtitle: Text(widget.beacon.proximityUUID),
-                trailing: GestureDetector(
-                  child: Icon(Icons.menu),
-                  onTap: () {},
-                ),
               ),
             ),
             Card(

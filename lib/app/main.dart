@@ -47,7 +47,6 @@ class BeaconApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   final String title;
-
   HomePage({Key key, this.title}) : super(key: key);
 
   @override
@@ -61,9 +60,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final _savedBeacons = <Beacon>[];
   String savedRegionsFileName = "saved_regions.json";
   String savedBeaconsFileName = "saved_beacons.json";
-  File jsonSavedRegionsFile;
-  File jsonSavedBeaconsFile;
-  Directory dir;
+  List<MapEntry<Beacon, bool>> _lastScannedBeacons = new List();
 
   final StreamController<BluetoothState> streamController = StreamController();
   StreamSubscription<BluetoothState> _streamBluetooth;
@@ -80,12 +77,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
     listeningState();
-
-    getApplicationDocumentsDirectory().then((Directory directory) {
-      dir = directory;
-      jsonSavedRegionsFile = new File(dir.path + "/" + savedRegionsFileName);
-      jsonSavedBeaconsFile = new File(dir.path + "/" + savedBeaconsFileName);
-    });
+    updateSavedInfo();
   }
 
   @override
@@ -318,18 +310,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             if (!authorizationStatusOk ||
                 !locationServiceEnabled ||
                 !bluetoothEnabled) return _authorizationRequestPage();
-            if (snapshot.connectionState != ConnectionState.done ||
-                _beacons == null)
+            if (snapshot.connectionState != ConnectionState.done)
+              if(_lastScannedBeacons.isNotEmpty) return _buildBeaconFound(_lastScannedBeacons);
+              else return Center(child: CircularProgressIndicator());
+            if (_beacons == null){
               return Center(child: CircularProgressIndicator());
+            }
             if (_beacons.isEmpty) {
               if (_savedBeacons.isNotEmpty) {
-                return _buildBeaconFound();
+                return _buildBeaconFound(_getScannedBeacon());
               } else
                 return Center(child: CircularProgressIndicator());
             } else
               return SafeArea(
                 child: Container(
-                  child: _buildBeaconFound(),
+                  child: _buildBeaconFound(_getScannedBeacon()),
                 ),
               );
           }),
@@ -343,7 +338,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Future<void> updateRegionList() async {
     var directory = await getApplicationDocumentsDirectory();
-    jsonSavedRegionsFile =
+    File jsonSavedRegionsFile =
         new File(directory.path + "/" + savedRegionsFileName);
     if (jsonSavedRegionsFile.existsSync()) {
       _savedRegions.clear();
@@ -358,7 +353,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Future<void> updateBeaconList() async {
     var directory = await getApplicationDocumentsDirectory();
-    jsonSavedRegionsFile =
+    File jsonSavedBeaconsFile =
         new File(directory.path + "/" + savedBeaconsFileName);
     if (jsonSavedBeaconsFile.existsSync()) {
       _savedBeacons.clear();
@@ -377,8 +372,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-  Widget _buildBeaconFound() {
-
+  List<MapEntry<Beacon, bool>> _getScannedBeacon(){
     //i delete the beacons in the regions that I'm not ranging
     final toRemove = <Beacon>[];
     for (Beacon beacon in _beacons) {
@@ -410,18 +404,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       }
       if (toAdd) beaconSavedMap.add(new MapEntry(saved, true));
     }
+    _lastScannedBeacons.clear();
+    _lastScannedBeacons.addAll(beaconSavedMap);
+    return beaconSavedMap;
+  }
 
-    if (beaconSavedMap.isEmpty) return Center(child: CircularProgressIndicator());
-
+  Widget _buildBeaconFound(List<MapEntry<Beacon, bool>> beaconListWithSavedInfo) {
+    if (beaconListWithSavedInfo.isEmpty) return Center(child: CircularProgressIndicator());
     return ListView.builder(
-        itemCount: beaconSavedMap.length,
+        itemCount: beaconListWithSavedInfo.length,
         itemBuilder: (context, index) {
-          return Card(child: _buildRow(beaconSavedMap[index].key, beaconSavedMap[index].value));
+          return Card(child: _buildRow(beaconListWithSavedInfo[index].key, beaconListWithSavedInfo[index].value));
         });
   }
 
   Widget _buildRow(Beacon beacon, bool isSaved) {
-
     return ListTile(
         leading: Icon(
           Icons.bluetooth_audio_rounded,
