@@ -1,5 +1,7 @@
 # iBeacon Reader
 
+iBeacon scanner. Supports Android API 18+.
+
 ## The Idea
 
 This project is a Flutter application with the aim of testing the ease with which the data of a BLE Beacon can be read.
@@ -55,3 +57,7 @@ If a Beacon is not found but is local saved, the Bluetooth icon will be grey.
   <img src="screenshots/homePageWithLocalBeacon.png" width=200>
   <img src="screenshots/beaconPage.png" width=200>
 </p>
+
+## Author
+
+This app is developed by Roberto Filippini, from the Flutter Team of STB1019. You can contact me at <roberto.filippini@ieee.org>.

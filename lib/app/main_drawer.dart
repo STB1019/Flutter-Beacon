@@ -76,6 +76,7 @@ class _BeaconDrawerState extends State<BeaconDrawer> {
             ),
             onTap: () {
               showAboutDialog(
+                context: context,
                 //yes I was bored
                 children: [
                   Column(
@@ -93,7 +94,7 @@ class _BeaconDrawerState extends State<BeaconDrawer> {
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: FaIcon(FontAwesomeIcons.earlybirds),
+                            child: FaIcon(FontAwesomeIcons.birthdayCake),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -125,10 +126,10 @@ class _BeaconDrawerState extends State<BeaconDrawer> {
                     ],
                   ),
                 ],
-                context: context,
+                applicationIcon: FlutterLogo(),
+                applicationName: "iBeacon Reader",
                 applicationVersion: '0.0.1',
-                applicationLegalese:
-                    "Do you really mind to see the licenses? Wow",
+                applicationLegalese: "Developed by STB1019"
               );
             },
           ),
