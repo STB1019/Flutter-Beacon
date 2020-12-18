@@ -286,7 +286,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       rssi: -76,
                       txPower: -60,
                       accuracy: 2.43,
-                    )),
+                    ), true),
                   ),
                   Card(
                     child: _buildRow(Beacon(
@@ -297,7 +297,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       rssi: -76,
                       txPower: -60,
                       accuracy: 2.43,
-                    )),
+                    ), false),
                   ),
                 ],
               ),

@@ -82,7 +82,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
               color: ThemeBuilder.of(context).isDarkModeOn()
                   ? Colors.white
                   : Colors.black,
-              scale: 1.5,
+              scale: 1.4,
             ),
           ),
           Center(
@@ -102,7 +102,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
                   "Aggiungi una Regione",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                   ),
                 ),
                 onPressed: () => _addRegion(),
@@ -165,26 +165,19 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
               text: "Identifier: ",
               style: TextStyle(
                 color: Theme.of(context).textTheme.bodyText1.color,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                //fontWeight: FontWeight.bold,
               ),
               children: <TextSpan>[
                 TextSpan(
                   text: region.identifier,
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ]),
         ),
-        /*Text(
-          "Identifier: " + region.identifier,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),*/
         subtitle: Text(
           region.proximityUUID,
           style: TextStyle(
