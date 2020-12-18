@@ -238,7 +238,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   return IconButton(
                     icon: Icon(Icons.bluetooth_connected),
                     onPressed: () {},
-                    //devo dare la possibilità di disabilitarlo
                     color: Colors.green,
                   );
                 }
@@ -269,40 +268,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           ),
         ],
       ),
-
-      //ONLY FOR TESTING GRAPHICS
-      /*body: FutureBuilder(
-          future: updateRegionList(),
-          builder: (context, snapshot) {
-            return SafeArea(
-              child: ListView(
-                children: [
-                  Card(
-                    child: _buildRow(Beacon(
-                      proximityUUID: 'CB10023F-A318-3394-4199-A8730C7C1AEC',
-                      macAddress: '00:0a:95:9d:68:16',
-                      major: 3,
-                      minor: 41,
-                      rssi: -76,
-                      txPower: -60,
-                      accuracy: 2.43,
-                    ), true),
-                  ),
-                  Card(
-                    child: _buildRow(Beacon(
-                      proximityUUID: 'AF10343D-A368-31A4-4D9E-CC73001C1FEA',
-                      macAddress: '00:0b:97:3d:58:1f',
-                      major: 6,
-                      minor: 42,
-                      rssi: -76,
-                      txPower: -60,
-                      accuracy: 2.43,
-                    ), false),
-                  ),
-                ],
-              ),
-            );
-          }),*/
 
       body: FutureBuilder(
           future: updateSavedInfo(),
@@ -440,7 +405,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         ),
         onTap: () {
           setState(() {
-            Region beaconRegion = new Region(identifier: "Sconosciuto");
+            Region beaconRegion = new Region(identifier: "Unknown");
             for (Region element in _savedRegions) {
               if (beacon.proximityUUID == element.proximityUUID) {
                 beaconRegion = element;
@@ -470,7 +435,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
             Center(
               child: Text(
-                "Impossibile eseguire la scansione",
+                "Cannot scan Beacons",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 18,
@@ -481,7 +446,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
               child: Center(
                 child: Text(
-                  "Consentire l'accesso alla localizzazione e attivare il Bluetooth del dispositivo",
+                  "Allow location access and turn on the device's Bluetooth",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,

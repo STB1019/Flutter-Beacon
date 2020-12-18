@@ -87,7 +87,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
           ),
           Center(
             child: Text(
-              "Nessuna Regione salvata",
+              "No Region saved",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
@@ -99,7 +99,7 @@ class _ManageRegionsPageState extends State<ManageRegionsPage> {
             child: Center(
               child: MaterialButton(
                 child: Text(
-                  "Aggiungi una Regione",
+                  "Add Region",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,

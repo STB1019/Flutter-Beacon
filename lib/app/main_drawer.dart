@@ -1,6 +1,5 @@
 import 'package:Beacon/app/manage_regions_page.dart';
 import 'package:Beacon/app/theme.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -77,6 +76,7 @@ class _BeaconDrawerState extends State<BeaconDrawer> {
             ),
             onTap: () {
               showAboutDialog(
+                //yes I was bored
                 children: [
                   Column(
                     children: [
@@ -127,7 +127,6 @@ class _BeaconDrawerState extends State<BeaconDrawer> {
                 ],
                 context: context,
                 applicationVersion: '0.0.1',
-                //applicationIcon: FaIcon(FontAwesomeIcons.cocktail),
                 applicationLegalese:
                     "Do you really mind to see the licenses? Wow",
               );
