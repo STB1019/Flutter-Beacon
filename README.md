@@ -5,6 +5,7 @@ iBeacon scanner. Supports Android API 18+.
 ## The Idea
 
 This is the final result of the first part of a fantastic Chapter I'm working on.
+
 **Chapter Flutter** is one of the main projects of IEEE Student Branch of Brescia. The aim of the project is to develop and study Flutter Framework, 
 while experimenting with the creation of an App starting by zero, with no previous knowledge.
 
@@ -68,7 +69,7 @@ This app is developed by Roberto Filippini, from the Flutter Team of IEEE STB101
 
 You can contact me for more information at <roberto.filippini@ieee.org>.
 
-Here is a link to see the [Student Branch GitHub page](https://github.com/orgs/STB1019/teams/chapter-flutter)
+Here is a link to see the [Student Branch GitHub page](https://github.com/STB1019)
 
 Here are the links to the other projects made by my colleagues:
 - [Flutter-NFC](https://github.com/STB1019/Flutter-NFC)
